@@ -1,0 +1,23 @@
+{
+  "name": "reviewurr",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Local code review tool that groups changes by logical flow",
+  "main": "index.js",
+  "bin": {
+    "reviewurr": "./bin/cli.js"
+  },
+  "scripts": {
+    "dev": "node bin/cli.js",
+    "build:ui": "cd ui && pnpm run build"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.19.0",
+  "dependencies": {
+    "diff2html": "^3.4.56",
+    "express": "^5.2.1",
+    "open": "^11.0.0"
+  }
+}
