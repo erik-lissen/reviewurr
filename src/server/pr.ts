@@ -1,5 +1,5 @@
 import { createServerFn } from '@tanstack/react-start'
-import { upsertPR, insertCommit, insertDiff, getPRById, getFullDiff, getCommits } from './db'
+import { upsertPR, insertCommit, insertDiff, getPRById, getFullDiff, getCommits, getAllPRs } from './db'
 import { parseDiff } from '@/lib/diff-types'
 
 async function runGh(args: string[]): Promise<string> {
@@ -90,4 +90,33 @@ export const getPRData = createServerFn({ method: 'GET' })
     const files = diffRow ? parseDiff(diffRow.content) : []
 
     return { pr, files, commits }
+  })
+
+/** Get all cached PRs for the landing page */
+export const getCachedPRs = createServerFn({ method: 'GET' })
+  .handler(async () => {
+    return getAllPRs()
+  })
+
+/** Check if a PR has been updated since last fetch */
+export const checkPRUpdate = createServerFn({ method: 'POST' })
+  .validator((d: { prId: number }) => d)
+  .handler(async ({ data: { prId } }) => {
+    const pr = getPRById(prId)
+    if (!pr) throw new Error(`PR not found: ${prId}`)
+
+    try {
+      const output = await runGh([
+        'pr', 'view', String(pr.number), '-R', `${pr.owner}/${pr.repo}`,
+        '--json', 'headRefOid',
+      ])
+      const { headRefOid } = JSON.parse(output)
+      return { updated: headRefOid !== pr.head_sha, currentSha: headRefOid }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      if (message.includes('no pull requests found') || message.includes('Could not resolve')) {
+        return { updated: false, currentSha: pr.head_sha, error: 'This PR may have been deleted or is no longer accessible.' }
+      }
+      return { updated: false, currentSha: pr.head_sha, error: `Failed to check for updates: ${message}` }
+    }
   })

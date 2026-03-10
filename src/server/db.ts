@@ -124,4 +124,22 @@ export function getCommits(prId: number) {
   ).all(prId)
 }
 
+/** Get all PRs ordered by most recently fetched */
+export function getAllPRs() {
+  return db.query<{
+    id: number
+    owner: string
+    repo: string
+    number: number
+    title: string
+    body: string | null
+    head_sha: string
+    base_branch: string
+    head_branch: string
+    additions: number
+    deletions: number
+    fetched_at: string
+  }, []>('SELECT * FROM prs ORDER BY fetched_at DESC').all()
+}
+
 export { db }
