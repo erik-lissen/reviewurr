@@ -3,6 +3,7 @@ import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
 import { getPRData, checkPRUpdate, fetchPR } from '@/server/pr'
 import { DiffRenderer, type ViewMode } from '@/components/diff-renderer'
 import { FileTree } from '@/components/file-tree'
+import { BeatList } from '@/components/flow/beat-list'
 
 export const Route = createFileRoute('/pr/$id')({
   component: PrDetail,
@@ -11,6 +12,7 @@ export const Route = createFileRoute('/pr/$id')({
 
 function PrDetail() {
   const { pr, files } = Route.useLoaderData()
+  const [activeTab, setActiveTab] = useState<'files' | 'flow'>('files')
   const [viewMode, setViewMode] = useState<ViewMode>('unified')
   const [updateStatus, setUpdateStatus] = useState<{
     checking: boolean
@@ -100,46 +102,62 @@ function PrDetail() {
         <div className="flex gap-4">
           <button
             type="button"
-            className="px-4 py-2 text-sm font-medium text-gh-accent border-b-2 border-gh-accent"
+            onClick={() => setActiveTab('files')}
+            className={`px-4 py-2 text-sm font-medium ${
+              activeTab === 'files'
+                ? 'text-gh-accent border-b-2 border-gh-accent'
+                : 'text-gh-text/60 hover:text-gh-text'
+            }`}
           >
             Files
           </button>
           <button
             type="button"
-            className="px-4 py-2 text-sm font-medium text-gh-text/60 hover:text-gh-text"
+            onClick={() => setActiveTab('flow')}
+            className={`px-4 py-2 text-sm font-medium ${
+              activeTab === 'flow'
+                ? 'text-gh-accent border-b-2 border-gh-accent'
+                : 'text-gh-text/60 hover:text-gh-text'
+            }`}
           >
             Flow
           </button>
         </div>
-        <div className="flex gap-1 mb-1">
-          <button
-            type="button"
-            onClick={() => setViewMode('unified')}
-            className={`px-3 py-1 text-xs rounded-l border ${
-              viewMode === 'unified'
-                ? 'bg-gh-tertiary text-gh-text border-gh-text/20'
-                : 'bg-gh-secondary text-gh-text/50 border-gh-text/10 hover:text-gh-text'
-            }`}
-          >
-            Unified
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode('split')}
-            className={`px-3 py-1 text-xs rounded-r border ${
-              viewMode === 'split'
-                ? 'bg-gh-tertiary text-gh-text border-gh-text/20'
-                : 'bg-gh-secondary text-gh-text/50 border-gh-text/10 hover:text-gh-text'
-            }`}
-          >
-            Split
-          </button>
-        </div>
+        {activeTab === 'files' && (
+          <div className="flex gap-1 mb-1">
+            <button
+              type="button"
+              onClick={() => setViewMode('unified')}
+              className={`px-3 py-1 text-xs rounded-l border ${
+                viewMode === 'unified'
+                  ? 'bg-gh-tertiary text-gh-text border-gh-text/20'
+                  : 'bg-gh-secondary text-gh-text/50 border-gh-text/10 hover:text-gh-text'
+              }`}
+            >
+              Unified
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('split')}
+              className={`px-3 py-1 text-xs rounded-r border ${
+                viewMode === 'split'
+                  ? 'bg-gh-tertiary text-gh-text border-gh-text/20'
+                  : 'bg-gh-secondary text-gh-text/50 border-gh-text/10 hover:text-gh-text'
+              }`}
+            >
+              Split
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="flex gap-0">
         <div className="flex-1 min-w-0">
-          <DiffRenderer files={files} viewMode={viewMode} />
+          {activeTab === 'files' ? (
+            <DiffRenderer files={files} viewMode={viewMode} />
+          ) : (
+            <BeatList prId={pr.id} files={files} />
+          )}
         </div>
         <FileTree files={files} />
       </div>

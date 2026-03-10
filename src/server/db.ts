@@ -142,4 +142,107 @@ export function getAllPRs() {
   }, []>('SELECT * FROM prs ORDER BY fetched_at DESC').all()
 }
 
+// Beat analysis tables
+db.run(`
+  CREATE TABLE IF NOT EXISTS beats (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    pr_id INTEGER NOT NULL REFERENCES prs(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    reading_order INTEGER NOT NULL,
+    refs_json TEXT,
+    model TEXT NOT NULL DEFAULT 'claude-sonnet',
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  )
+`)
+
+db.run(`
+  CREATE TABLE IF NOT EXISTS beat_hunks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    beat_id INTEGER NOT NULL REFERENCES beats(id) ON DELETE CASCADE,
+    file_path TEXT NOT NULL,
+    hunk_spec TEXT NOT NULL DEFAULT 'all'
+  )
+`)
+
+/** Insert a beat, returning its id */
+export function insertBeat(
+  prId: number,
+  title: string,
+  description: string,
+  readingOrder: number,
+  refsJson: string | null,
+  model: string
+): number {
+  const result = db.run(
+    'INSERT INTO beats (pr_id, title, description, reading_order, refs_json, model) VALUES (?, ?, ?, ?, ?, ?)',
+    [prId, title, description, readingOrder, refsJson, model]
+  )
+  return Number(result.lastInsertRowid)
+}
+
+/** Insert a hunk reference for a beat */
+export function insertBeatHunk(beatId: number, filePath: string, hunkSpec: string): void {
+  db.run(
+    'INSERT INTO beat_hunks (beat_id, file_path, hunk_spec) VALUES (?, ?, ?)',
+    [beatId, filePath, hunkSpec]
+  )
+}
+
+/** Get beats with their hunks for a PR */
+export function getBeats(prId: number, model?: string) {
+  const whereClause = model
+    ? 'WHERE b.pr_id = ? AND b.model = ?'
+    : 'WHERE b.pr_id = ?'
+  const params = model ? [prId, model] : [prId]
+
+  const beats = db.query<{
+    id: number
+    pr_id: number
+    title: string
+    description: string
+    reading_order: number
+    refs_json: string | null
+    model: string
+    created_at: string
+  }, any[]>(`SELECT * FROM beats b ${whereClause} ORDER BY b.reading_order`).all(...params)
+
+  return beats.map((beat) => {
+    const hunks = db.query<{
+      id: number
+      beat_id: number
+      file_path: string
+      hunk_spec: string
+    }, [number]>('SELECT * FROM beat_hunks WHERE beat_id = ?').all(beat.id)
+
+    return {
+      ...beat,
+      refs: beat.refs_json ? JSON.parse(beat.refs_json) : [],
+      hunks,
+    }
+  })
+}
+
+/** Delete cached beats for a PR */
+export function deleteBeats(prId: number, model?: string): void {
+  if (model) {
+    // Delete hunks first (via beat ids)
+    const beatIds = db.query<{ id: number }, [number, string]>(
+      'SELECT id FROM beats WHERE pr_id = ? AND model = ?'
+    ).all(prId, model)
+    for (const { id } of beatIds) {
+      db.run('DELETE FROM beat_hunks WHERE beat_id = ?', [id])
+    }
+    db.run('DELETE FROM beats WHERE pr_id = ? AND model = ?', [prId, model])
+  } else {
+    const beatIds = db.query<{ id: number }, [number]>(
+      'SELECT id FROM beats WHERE pr_id = ?'
+    ).all(prId)
+    for (const { id } of beatIds) {
+      db.run('DELETE FROM beat_hunks WHERE beat_id = ?', [id])
+    }
+    db.run('DELETE FROM beats WHERE pr_id = ?', [prId])
+  }
+}
+
 export { db }
