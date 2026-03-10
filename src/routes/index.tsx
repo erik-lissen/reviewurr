@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { PRInput } from '@/components/pr-input'
 
 export const Route = createFileRoute('/')({
   component: Home,
@@ -11,18 +12,10 @@ function Home() {
       <p className="text-gh-text/70 mb-8">
         Paste a GitHub PR URL to start reviewing.
       </p>
-      <div className="flex gap-3">
-        <input
-          type="text"
-          placeholder="https://github.com/owner/repo/pull/123"
-          className="flex-1 bg-gh-secondary border border-gh-text/20 rounded-md px-4 py-2 text-gh-text placeholder:text-gh-text/40 focus:outline-none focus:ring-2 focus:ring-gh-accent/50"
-        />
-        <button
-          type="button"
-          className="bg-gh-accent text-white px-5 py-2 rounded-md font-medium hover:opacity-90 transition-opacity"
-        >
-          Review
-        </button>
+      <PRInput />
+      <div className="mt-12">
+        <h2 className="text-lg font-semibold text-gh-text/80 mb-3">Recent PRs</h2>
+        <p className="text-gh-text/40 text-sm">No recent reviews yet.</p>
       </div>
     </div>
   )
