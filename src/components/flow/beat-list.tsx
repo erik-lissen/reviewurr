@@ -6,20 +6,21 @@ import { analyzePR, getCachedBeats, clearBeats } from '@/server/analysis'
 interface BeatListProps {
   prId: number
   files: DiffFile[]
+  model?: string
 }
 
-export function BeatList({ prId, files }: BeatListProps) {
+export function BeatList({ prId, files, model = 'claude-sonnet' }: BeatListProps) {
   const [beats, setBeats] = useState<Beat[] | null>(null)
   const [loading, setLoading] = useState(true)
   const [analyzing, setAnalyzing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Check for cached beats on mount
+  // Check for cached beats on mount and when model changes
   useEffect(() => {
     let cancelled = false
     setLoading(true)
 
-    getCachedBeats({ data: { prId } })
+    getCachedBeats({ data: { prId, model } })
       .then((cached) => {
         if (cancelled) return
         setBeats(cached as Beat[] | null)
@@ -31,13 +32,13 @@ export function BeatList({ prId, files }: BeatListProps) {
       })
 
     return () => { cancelled = true }
-  }, [prId])
+  }, [prId, model])
 
   const handleAnalyze = async () => {
     setAnalyzing(true)
     setError(null)
     try {
-      const result = await analyzePR({ data: { prId } })
+      const result = await analyzePR({ data: { prId, model } })
       setBeats(result as Beat[])
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Analysis failed')
@@ -47,7 +48,7 @@ export function BeatList({ prId, files }: BeatListProps) {
   }
 
   const handleReanalyze = async () => {
-    await clearBeats({ data: { prId } })
+    await clearBeats({ data: { prId, model } })
     setBeats(null)
     await handleAnalyze()
   }

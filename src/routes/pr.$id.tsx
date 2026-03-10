@@ -4,6 +4,8 @@ import { getPRData, checkPRUpdate, fetchPR } from '@/server/pr'
 import { DiffRenderer, type ViewMode } from '@/components/diff-renderer'
 import { FileTree } from '@/components/file-tree'
 import { BeatList } from '@/components/flow/beat-list'
+import { ModelSelector, type ModelOption } from '@/components/flow/model-selector'
+import { getPreferredModel, setPreferredModel } from '@/server/analysis'
 
 export const Route = createFileRoute('/pr/$id')({
   component: PrDetail,
@@ -14,6 +16,18 @@ function PrDetail() {
   const { pr, files } = Route.useLoaderData()
   const [activeTab, setActiveTab] = useState<'files' | 'flow'>('files')
   const [viewMode, setViewMode] = useState<ViewMode>('unified')
+  const [selectedModel, setSelectedModel] = useState<ModelOption>('claude-sonnet')
+
+  // Load preferred model from settings on mount
+  useEffect(() => {
+    getPreferredModel().then(setSelectedModel).catch(() => {})
+  }, [])
+
+  const handleModelChange = (model: ModelOption) => {
+    setSelectedModel(model)
+    setPreferredModel({ data: { model } }).catch(() => {})
+  }
+
   const [updateStatus, setUpdateStatus] = useState<{
     checking: boolean
     updated: boolean
@@ -123,6 +137,11 @@ function PrDetail() {
             Flow
           </button>
         </div>
+        {activeTab === 'flow' && (
+          <div className="mb-1">
+            <ModelSelector value={selectedModel} onChange={handleModelChange} />
+          </div>
+        )}
         {activeTab === 'files' && (
           <div className="flex gap-1 mb-1">
             <button
@@ -156,7 +175,7 @@ function PrDetail() {
           {activeTab === 'files' ? (
             <DiffRenderer files={files} viewMode={viewMode} />
           ) : (
-            <BeatList prId={pr.id} files={files} />
+            <BeatList prId={pr.id} files={files} model={selectedModel} />
           )}
         </div>
         <FileTree files={files} />

@@ -7,6 +7,8 @@ import {
   insertBeat,
   insertBeatHunk,
   deleteBeats,
+  getSetting,
+  setSetting,
 } from './db'
 import { detectRefs } from '@/lib/detect-refs'
 
@@ -78,10 +80,50 @@ Rules:
   return prompt
 }
 
-/** Run analysis on a PR using Claude CLI */
+// Cached codex availability check (once per server lifetime)
+let codexAvailableCache: boolean | null = null
+
+async function checkCodexInstalled(): Promise<boolean> {
+  if (codexAvailableCache !== null) return codexAvailableCache
+  try {
+    const proc = Bun.spawn(['codex', '--version'], {
+      stdout: 'pipe',
+      stderr: 'pipe',
+    })
+    await proc.exited
+    codexAvailableCache = proc.exitCode === 0
+  } catch {
+    codexAvailableCache = false
+  }
+  return codexAvailableCache
+}
+
+/** Check if codex CLI is available */
+export const checkCodexAvailable = createServerFn({ method: 'GET' })
+  .handler(async () => {
+    const available = await checkCodexInstalled()
+    return { available }
+  })
+
+/** Get the preferred model from settings */
+export const getPreferredModel = createServerFn({ method: 'GET' })
+  .handler(async () => {
+    const model = getSetting('preferred_model')
+    return (model === 'codex' ? 'codex' : 'claude-sonnet') as 'claude-sonnet' | 'codex'
+  })
+
+/** Set the preferred model */
+export const setPreferredModel = createServerFn({ method: 'POST' })
+  .validator((d: { model: string }) => d)
+  .handler(async ({ data: { model } }) => {
+    setSetting('preferred_model', model)
+    return { ok: true }
+  })
+
+/** Run analysis on a PR using Claude CLI or Codex */
 export const analyzePR = createServerFn({ method: 'POST' })
-  .validator((d: { prId: number }) => d)
-  .handler(async ({ data: { prId } }) => {
+  .validator((d: { prId: number; model?: string }) => d)
+  .handler(async ({ data: { prId, model: requestedModel } }) => {
     const pr = getPRById(prId)
     if (!pr) throw new Error(`PR not found: ${prId}`)
 
@@ -90,28 +132,47 @@ export const analyzePR = createServerFn({ method: 'POST' })
     if (!diffRow) throw new Error(`No diff found for PR: ${prId}`)
 
     const prompt = buildPrompt(pr, commits, diffRow.content)
-    const model = 'claude-sonnet'
+    const model = requestedModel || 'claude-sonnet'
 
-    // Shell out to claude CLI
+    // Shell out to CLI — unset CLAUDECODE env var regardless of model
     const env = { ...process.env }
     delete (env as Record<string, string | undefined>).CLAUDECODE
 
-    const proc = Bun.spawn(
-      ['claude', '-p', '--model', 'claude-sonnet-4-6', '--output-format', 'json'],
-      { stdin: 'pipe', stdout: 'pipe', stderr: 'pipe', env }
-    )
-    proc.stdin.write(prompt)
-    proc.stdin.end()
+    let output: string
+    let exitCode: number
 
-    const output = await new Response(proc.stdout).text()
-    const exitCode = await proc.exited
+    if (model === 'codex') {
+      // Use Codex CLI
+      const proc = Bun.spawn(['codex', '-q', '--model', 'codex-mini-latest'], {
+        stdin: 'pipe', stdout: 'pipe', stderr: 'pipe', env,
+      })
+      proc.stdin.write(prompt)
+      proc.stdin.end()
+      output = await new Response(proc.stdout).text()
+      exitCode = await proc.exited
 
-    if (exitCode !== 0) {
-      const stderr = await new Response(proc.stderr).text()
-      throw new Error(`Claude CLI failed (exit ${exitCode}): ${stderr}`)
+      if (exitCode !== 0) {
+        const stderr = await new Response(proc.stderr).text()
+        throw new Error(`Codex CLI failed (exit ${exitCode}): ${stderr}`)
+      }
+    } else {
+      // Use Claude CLI
+      const proc = Bun.spawn(
+        ['claude', '-p', '--model', 'claude-sonnet-4-6', '--output-format', 'json'],
+        { stdin: 'pipe', stdout: 'pipe', stderr: 'pipe', env }
+      )
+      proc.stdin.write(prompt)
+      proc.stdin.end()
+      output = await new Response(proc.stdout).text()
+      exitCode = await proc.exited
+
+      if (exitCode !== 0) {
+        const stderr = await new Response(proc.stderr).text()
+        throw new Error(`Claude CLI failed (exit ${exitCode}): ${stderr}`)
+      }
     }
 
-    // Parse Claude CLI JSON output — it wraps the response in { result: "..." }
+    // Parse CLI output — Claude wraps the response in { result: "..." }, Codex returns raw
     let resultText: string
     try {
       const cliOutput = JSON.parse(output)

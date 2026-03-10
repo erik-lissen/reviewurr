@@ -142,6 +142,30 @@ export function getAllPRs() {
   }, []>('SELECT * FROM prs ORDER BY fetched_at DESC').all()
 }
 
+// Settings table
+db.run(`
+  CREATE TABLE IF NOT EXISTS settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+  )
+`)
+
+/** Get a setting value by key */
+export function getSetting(key: string): string | null {
+  const row = db.query<{ value: string }, [string]>(
+    'SELECT value FROM settings WHERE key = ?'
+  ).get(key)
+  return row?.value ?? null
+}
+
+/** Set a setting value */
+export function setSetting(key: string, value: string): void {
+  db.run(
+    'INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value',
+    [key, value]
+  )
+}
+
 // Beat analysis tables
 db.run(`
   CREATE TABLE IF NOT EXISTS beats (
