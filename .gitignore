@@ -1,4 +1,7 @@
 node_modules/
-ui/node_modules/
-ui/dist/
+.output/
+dist/
 .env
+*.db
+.vinxi/
+.tanstack/
