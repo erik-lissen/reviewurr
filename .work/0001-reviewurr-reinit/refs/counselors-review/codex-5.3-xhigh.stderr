@@ -1,0 +1,1191 @@
+OpenAI Codex v0.111.0 (research preview)
+--------
+workdir: /Users/e/.superset/worktrees/reviewurr/initialize-project
+model: gpt-5.3-codex
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 019cdc3a-4ce4-7a21-8e74-c9506d06b2c2
+--------
+user
+Read the file at /Users/e/.superset/worktrees/reviewurr/initialize-project/agents/counselors/1773221331-code-review-request-context-feature-000/prompt.md and follow the instructions within it.
+mcp: pencil starting
+mcp: pencil ready
+mcp startup: ready: pencil
+codex
+I’ll open the referenced `prompt.md` first, then carry out exactly what it asks (likely a scoped code review) and report back with findings.
+exec
+/bin/zsh -lc 'cat /Users/e/.superset/worktrees/reviewurr/initialize-project/agents/counselors/1773221331-code-review-request-context-feature-000/prompt.md' in /Users/e/.superset/worktrees/reviewurr/initialize-project succeeded in 52ms:
+# Second Opinion Request
+
+## Question
+# Code Review Request
+
+## Context
+Feature: 0001-reviewurr-reinit
+
+## Changes to Review
+Review the current git diff. Run `git diff HEAD` to see the changes.
+
+## Additional Context
+Pre-ship review. All 8 tasks complete. Checking for issues before PR.
+
+## Instructions
+You are providing an independent code review. Be critical and thorough.
+- Read the referenced files to understand the full context
+- Identify bugs, security issues, performance problems
+- Check for missing error handling, edge cases, test coverage
+- Suggest improvements but be pragmatic
+codex
+I’ve loaded the review brief. Next I’m inspecting `git diff HEAD` and then I’ll read each changed file in full to produce a severity-ordered review with concrete file/line references.
+exec
+/bin/zsh -lc "cd /Users/e/.superset/worktrees/reviewurr/initialize-project && git diff --name-only HEAD && echo '---' && git diff --stat HEAD" in /Users/e/.superset/worktrees/reviewurr/initialize-project succeeded in 52ms:
+---
+exec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && git status --short --branch' in /Users/e/.superset/worktrees/reviewurr/initialize-project succeeded in 52ms:
+## initialize-project
+?? .work/
+?? agents/
+exec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && git rev-parse --is-inside-work-tree && git rev-parse --short HEAD && git log --oneline --decorate -n 8' in /Users/e/.superset/worktrees/reviewurr/initialize-project succeeded in 52ms:
+true
+a40dd56
+a40dd56 (HEAD -> initialize-project) feat: commit-aware beat analysis with improved prompt engineering
+65c0729 feat: model selector with Codex integration and per-model caching
+9f875cf feat: add Flow tab with beat analysis via Claude CLI
+a40a156 feat: cached PRs list and PR update detection
+ca97783 feat: add file tree sidebar and split (side-by-side) diff view toggle
+b4105fb feat: virtualized diff renderer with Shiki syntax highlighting
+362fefb feat: PR fetch, store, and basic diff display
+aa5d051 feat: scaffold TanStack Start + Bun + Tailwind v4 + shadcn/ui project
+codex
+`git diff HEAD` is empty in this worktree, so I’m checking for the intended review scope (for example, branch commits vs base or another repository root) before I proceed with findings.
+exec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && ls -la' in /Users/e/.superset/worktrees/reviewurr/initialize-project succeeded in 51ms:
+total 256
+drwxr-xr-x@  17 e  staff    544 Mar 11 09:28 .
+drwxr-xr-x@   3 e  staff     96 Mar 10 16:18 ..
+-rw-r--r--@   1 e  staff     67 Mar 10 16:18 .git
+-rw-r--r--@   1 e  staff     58 Mar 10 16:39 .gitignore
+drwxr-xr-x@   3 e  staff     96 Mar 10 16:39 .tanstack
+drwxr-xr-x@   3 e  staff     96 Mar 10 16:23 .work
+drwxr-xr-x@   3 e  staff     96 Mar 11 09:28 agents
+-rw-r--r--@   1 e  staff  99674 Mar 10 16:47 bun.lock
+-rw-r--r--@   1 e  staff    431 Mar 10 16:39 components.json
+drwxr-xr-x@   4 e  staff    128 Mar 10 16:50 dist
+drwxr-xr-x@ 232 e  staff   7424 Mar 10 16:47 node_modules
+-rw-r--r--@   1 e  staff   1015 Mar 10 16:47 package.json
+drwxr-xr-x@  10 e  staff    320 Mar 10 16:47 src
+drwxr-xr-x@  11 e  staff    352 Mar 10 17:08 tests
+-rw-r--r--@   1 e  staff    544 Mar 10 16:38 tsconfig.json
+-rw-r--r--@   1 e  staff    437 Mar 10 16:49 vite.config.ts
+-rw-r--r--@   1 e  staff    298 Mar 10 16:38 vitest.config.ts
+exec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && git branch -a --verbose' in /Users/e/.superset/worktrees/reviewurr/initialize-project succeeded in 52ms:
+* initialize-project a40dd56 feat: commit-aware beat analysis with improved prompt engineering
++ main               04ccd41 chore: add ui readme
+exec
+/bin/zsh -lc "cd /Users/e/.superset/worktrees/reviewurr/initialize-project && git merge-base main HEAD && git diff --stat main...HEAD | sed -n '1,120p'" in /Users/e/.superset/worktrees/reviewurr/initialize-project succeeded in 51ms:
+04ccd41ba8a401a0a519e8249c607c59e1e472be
+ .gitignore                                   |    7 +-
+ bin/cli.js                                   |   43 -
+ bun.lock                                     |  878 ++++++++++++
+ components.json                              |   21 +
+ package.json                                 |   44 +-
+ pnpm-lock.yaml                               |  707 ----------
+ src/analyzer.js                              |  135 --
+ src/components/diff-renderer/file-diff.tsx   |  126 ++
+ src/components/diff-renderer/hunk-header.tsx |   14 +
+ src/components/diff-renderer/index.tsx       |   29 +
+ src/components/diff-renderer/line.tsx        |   56 +
+ src/components/diff-renderer/split-view.tsx  |  187 +++
+ src/components/file-tree.tsx                 |  135 ++
+ src/components/flow/beat-card.tsx            |   96 ++
+ src/components/flow/beat-list.tsx            |  117 ++
+ src/components/flow/model-selector.tsx       |   36 +
+ src/components/pr-input.tsx                  |   57 +
+ src/components/pr-list.tsx                   |   52 +
+ src/fetcher.js                               |   45 -
+codex
+`git diff HEAD` has no uncommitted tracked changes here. I’m treating this as a pre-PR branch review and auditing `main...HEAD` plus test/lint signals to surface concrete risks.
+exec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && cat package.json' in /Users/e/.superset/worktrees/reviewurr/initialize-projectexec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && cat tsconfig.json' in /Users/e/.superset/worktrees/reviewurr/initialize-projectexec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && git diff --name-only main...HEAD' in /Users/e/.superset/worktrees/reviewurr/initialize-project succeeded in 52ms:
+{
+  "name": "reviewurr",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "start": "node .output/server/index.mjs",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@tanstack/react-router": "^1.114.3",
+    "@tanstack/react-start": "^1.114.3",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-window": "^2.2.7",
+    "shiki": "^4.0.2",
+ succeeded in 50ms:
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "types": ["bun-types"]
+  },
+  "include": ["src", "tests", "vite.config.ts", "vitest.config.ts"],
+ succeeded in 51ms:
+.gitignore
+bin/cli.js
+bun.lock
+components.json
+package.json
+pnpm-lock.yaml
+src/analyzer.js
+src/components/diff-renderer/file-diff.tsx
+src/components/diff-renderer/hunk-header.tsx
+src/components/diff-renderer/index.tsx
+src/components/diff-renderer/line.tsx
+src/components/diff-renderer/split-view.tsx
+src/components/file-tree.tsx
+src/components/flow/beat-card.tsx
+src/components/flow/beat-list.tsx
+src/components/flow/model-selector.tsx
+src/components/pr-input.tsx
+src/components/pr-list.tsx
+src/fetcher.js
+src/lib/detect-refs.ts
+codex
+I’m now validating behavior with the test suite and then drilling into the most risk-heavy files (`src/server/*`, routing, diff parsing, persistence) for edge cases and regressions.
+exec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && npm test' in /Users/e/.superset/worktrees/reviewurr/initialize-project exited 1 in 372ms:
+
+> reviewurr@0.1.0 test
+> vitest run
+
+failed to load config from /Users/e/.superset/worktrees/reviewurr/initialize-project/vitest.config.ts
+
+⎯⎯⎯⎯⎯⎯⎯ Startup Error ⎯⎯⎯⎯⎯⎯⎯⎯
+Error: EPERM: operation not permitted, open '/Users/e/.superset/worktrees/reviewurr/initialize-project/node_modules/.vite-temp/vitest.config.ts.timestamp-1773221405975-7d28a14559b278.mjs'
+    at async open (node:internal/fs/promises:642:25)
+    at async Object.writeFile (node:internal/fs/promises:1249:14)
+    at async loadConfigFromBundledFile (file:///Users/e/.superset/worktrees/reviewurr/initialize-project/node_modules/vite/dist/node/chunks/dep-D4NMHUTW.js:49449:5)
+    at async bundleAndLoadConfigFile (file:///Users/e/.superset/worktrees/reviewurr/initialize-project/node_modules/vite/dist/node/chunks/dep-D4NMHUTW.js:49294:22)
+    at async loadConfigFromFile (file:///Users/e/.superset/worktrees/reviewurr/initialize-project/node_modules/vite/dist/node/chunks/dep-D4NMHUTW.js:49257:44)
+    at async resolveConfig (file:///Users/e/.superset/worktrees/reviewurr/initialize-project/node_modules/vite/dist/node/chunks/dep-D4NMHUTW.js:48752:24)
+    at async _createServer (file:///Users/e/.superset/worktrees/reviewurr/initialize-project/node_modules/vite/dist/node/chunks/dep-D4NMHUTW.js:38349:66)
+    at async createViteServer (file:///Users/e/.superset/worktrees/reviewurr/initialize-project/node_modules/vitest/dist/chunks/cli-api.BkDphVBG.js:6911:17)
+    at async createVitest (file:///Users/e/.superset/worktrees/reviewurr/initialize-project/node_modules/vitest/dist/chunks/cli-api.BkDphVBG.js:10202:17)
+    at async prepareVitest (file:///Users/e/.superset/worktrees/reviewurr/initialize-project/node_modules/vitest/dist/chunks/cli-api.BkDphVBG.js:10541:14) {
+  errno: -1,
+  code: 'EPERM',
+exec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && nl -ba src/server/db.ts' in /Users/e/.superset/worktrees/reviewurr/initialize-projectexec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && nl -ba src/server/pr.ts' in /Users/e/.superset/worktrees/reviewurr/initialize-projectexec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && nl -ba src/server/analysis.ts' in /Users/e/.superset/worktrees/reviewurr/initialize-project succeeded in 52ms:
+     1	import { createServerFn } from '@tanstack/react-start'
+     2	import { upsertPR, insertCommit, insertDiff, getPRById, getFullDiff, getCommits, getAllPRs } from './db'
+     3	import { parseDiff } from '@/lib/diff-types'
+     4	
+     5	async function runGh(args: string[]): Promise<string> {
+     6	  const proc = Bun.spawn(['gh', ...args], { stdout: 'pipe', stderr: 'pipe' })
+     7	  const output = await new Response(proc.stdout).text()
+     8	  const exitCode = await proc.exited
+     9	  if (exitCode !== 0) {
+    10	    const stderr = await new Response(proc.stderr).text()
+    11	    throw new Error(`gh command failed: gh ${args.join(' ')}\n${stderr}`)
+    12	  }
+    13	  return output
+    14	}
+    15	
+    16	/** Fetch a PR from GitHub and store it in SQLite. Returns the internal PR id. */
+    17	export const fetchPR = createServerFn({ method: 'POST' })
+    18	  .validator((d: { owner: string; repo: string; number: number }) => d)
+    19	  .handler(async ({ data }) => {
+    20	    const { owner, repo, number } = data
+ succeeded in 52ms:
+     1	import { Database } from 'bun:sqlite'
+     2	
+     3	const db = new Database('reviewurr.db')
+     4	
+     5	// Enable WAL mode for better concurrent read performance
+     6	db.run('PRAGMA journal_mode = WAL')
+     7	
+     8	// Initialize schema
+     9	db.run(`
+    10	  CREATE TABLE IF NOT EXISTS prs (
+    11	    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    12	    owner TEXT NOT NULL,
+    13	    repo TEXT NOT NULL,
+    14	    number INTEGER NOT NULL,
+    15	    title TEXT NOT NULL,
+    16	    body TEXT,
+    17	    head_sha TEXT NOT NULL,
+    18	    base_branch TEXT NOT NULL,
+    19	    head_branch TEXT NOT NULL,
+    20	    additions INTEGER NOT NULL DEFAULT 0,
+ succeeded in 51ms:
+     1	import { createServerFn } from '@tanstack/react-start'
+     2	import {
+     3	  getPRById,
+     4	  getCommits,
+     5	  getCommitDiffs,
+     6	  getFullDiff,
+     7	  getBeats,
+     8	  insertBeat,
+     9	  insertBeatHunk,
+    10	  deleteBeats,
+    11	  getSetting,
+    12	  setSetting,
+    13	} from './db'
+    14	import { detectRefs } from '@/lib/detect-refs'
+    15	
+    16	interface BeatFile {
+    17	  path: string
+    18	  relevantHunks: string
+    19	}
+    20	
+exec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && nl -ba src/routes/pr.$id.tsx' in /Users/e/.superset/worktrees/reviewurr/initialize-projectexec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && nl -ba src/routes/index.tsx' in /Users/e/.superset/worktrees/reviewurr/initialize-projectexec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && nl -ba src/routes/__root.tsx' in /Users/e/.superset/worktrees/reviewurr/initialize-project exited 1 in 51ms:
+nl: src/routes/pr..tsx: No such file or directory
+ succeeded in 51ms:
+     1	import { createFileRoute } from '@tanstack/react-router'
+     2	import { PRInput } from '@/components/pr-input'
+     3	import { PRList } from '@/components/pr-list'
+     4	import { getCachedPRs } from '@/server/pr'
+     5	
+     6	export const Route = createFileRoute('/')({
+     7	  component: Home,
+     8	  loader: async () => await getCachedPRs(),
+     9	})
+    10	
+    11	function Home() {
+    12	  const prs = Route.useLoaderData()
+    13	
+    14	  return (
+    15	    <div className="max-w-2xl mx-auto py-12">
+    16	      <h1 className="text-2xl font-bold text-gh-text mb-4">Code Review</h1>
+    17	      <p className="text-gh-text/70 mb-8">
+    18	        Paste a GitHub PR URL to start reviewing.
+    19	      </p>
+    20	      <PRInput />
+ succeeded in 51ms:
+     1	import {
+     2	  Outlet,
+     3	  createRootRoute,
+     4	  HeadContent,
+     5	  Scripts,
+     6	  Link,
+     7	} from '@tanstack/react-router'
+     8	import type { ReactNode } from 'react'
+     9	import appCss from '@/styles/app.css?url'
+    10	
+    11	export const Route = createRootRoute({
+    12	  head: () => ({
+    13	    meta: [
+    14	      { charSet: 'utf-8' },
+    15	      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+    16	      { title: 'reviewurr' },
+    17	    ],
+    18	    links: [{ rel: 'stylesheet', href: appCss }],
+    19	  }),
+    20	  component: RootComponent,
+codex
+I hit a shell expansion issue for `pr.$id.tsx`; I’m reopening it with proper escaping and continuing the line-by-line review.
+exec
+/bin/zsh -lc "cd /Users/e/.superset/worktrees/reviewurr/initialize-project && nl -ba 'src/routes/pr."'$id.tsx'"'" in /Users/e/.superset/worktrees/reviewurr/initialize-project succeeded in 51ms:
+     1	import { useState, useEffect } from 'react'
+     2	import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
+     3	import { getPRData, checkPRUpdate, fetchPR } from '@/server/pr'
+     4	import { DiffRenderer, type ViewMode } from '@/components/diff-renderer'
+     5	import { FileTree } from '@/components/file-tree'
+     6	import { BeatList } from '@/components/flow/beat-list'
+     7	import { ModelSelector, type ModelOption } from '@/components/flow/model-selector'
+     8	import { getPreferredModel, setPreferredModel } from '@/server/analysis'
+     9	
+    10	export const Route = createFileRoute('/pr/$id')({
+    11	  component: PrDetail,
+    12	  loader: async ({ params }) => await getPRData({ data: parseInt(params.id) }),
+    13	})
+    14	
+    15	function PrDetail() {
+    16	  const { pr, files } = Route.useLoaderData()
+    17	  const [activeTab, setActiveTab] = useState<'files' | 'flow'>('files')
+    18	  const [viewMode, setViewMode] = useState<ViewMode>('unified')
+    19	  const [selectedModel, setSelectedModel] = useState<ModelOption>('claude-sonnet')
+    20	
+exec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && nl -ba src/lib/diff-types.ts' in /Users/e/.superset/worktrees/reviewurr/initialize-projectexec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && nl -ba src/lib/split-diff.ts' in /Users/e/.superset/worktrees/reviewurr/initialize-projectexec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && nl -ba src/lib/highlight.ts' in /Users/e/.superset/worktrees/reviewurr/initialize-project succeeded in 51ms:
+     1	/** Parsed representation of a single file within a unified diff */
+     2	export interface DiffFile {
+     3	  filename: string
+     4	  additions: number
+     5	  deletions: number
+     6	  content: string
+     7	}
+     8	
+     9	/** A parsed hunk from a unified diff */
+    10	export interface DiffHunk {
+    11	  oldStart: number
+    12	  oldLines: number
+    13	  newStart: number
+    14	  newLines: number
+    15	  header: string
+    16	  changes: DiffChange[]
+    17	}
+    18	
+    19	/** A single line change within a hunk */
+    20	export interface DiffChange {
+ succeeded in 50ms:
+     1	import type { DiffChange, DiffHunk } from './diff-types'
+     2	
+     3	/** A row in the split (side-by-side) diff view */
+     4	export type SplitRow =
+     5	  | { kind: 'hunk-header'; header: string }
+     6	  | { kind: 'pair'; left: DiffChange | null; right: DiffChange | null }
+     7	
+     8	/** Convert hunks into aligned split-view rows */
+     9	export function hunksToSplitRows(hunks: DiffHunk[]): SplitRow[] {
+    10	  const rows: SplitRow[] = []
+    11	
+    12	  for (const hunk of hunks) {
+    13	    rows.push({ kind: 'hunk-header', header: hunk.header })
+    14	
+    15	    let i = 0
+    16	    const changes = hunk.changes
+    17	
+    18	    while (i < changes.length) {
+    19	      const change = changes[i]
+    20	
+ succeeded in 50ms:
+     1	export interface HighlightToken {
+     2	  content: string
+     3	  color?: string
+     4	}
+     5	
+     6	type PendingRequest = {
+     7	  resolve: (tokens: HighlightToken[][]) => void
+     8	  reject: (err: Error) => void
+     9	}
+    10	
+    11	let worker: Worker | null = null
+    12	let requestId = 0
+    13	const pending = new Map<string, PendingRequest>()
+    14	
+    15	function getWorker(): Worker {
+    16	  if (worker) return worker
+    17	  worker = new Worker(
+    18	    new URL('../workers/highlighter.worker.ts', import.meta.url),
+    19	    { type: 'module' }
+    20	  )
+exec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && nl -ba src/components/diff-renderer/split-view.tsx' in /Users/e/.superset/worktrees/reviewurr/initialize-projectexec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && nl -ba src/components/diff-renderer/index.tsx' in /Users/e/.superset/worktrees/reviewurr/initialize-projectexec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && nl -ba src/components/diff-renderer/file-diff.tsx' in /Users/e/.superset/worktrees/reviewurr/initialize-project succeeded in 52ms:
+     1	import type { DiffFile } from '@/lib/diff-types'
+     2	import { FileDiff } from './file-diff'
+     3	import { SplitView } from './split-view'
+     4	
+     5	export type ViewMode = 'unified' | 'split'
+     6	
+     7	interface DiffRendererProps {
+     8	  files: DiffFile[]
+     9	  viewMode?: ViewMode
+    10	}
+    11	
+    12	export function DiffRenderer({ files, viewMode = 'unified' }: DiffRendererProps) {
+    13	  return (
+    14	    <div className="space-y-2">
+    15	      {files.map((file) => (
+    16	        <div key={file.filename} id={`file-${encodeURIComponent(file.filename)}`}>
+    17	          {viewMode === 'split' ? (
+    18	            <SplitView file={file} />
+    19	          ) : (
+    20	            <FileDiff file={file} />
+ succeeded in 52ms:
+     1	import { useState, useEffect, useCallback } from 'react'
+     2	import { List } from 'react-window'
+     3	import { parseHunks, hunksToRows, langFromFilename, type DiffFile, type DiffRow } from '@/lib/diff-types'
+     4	import { highlight, type HighlightToken } from '@/lib/highlight'
+     5	import { Line } from './line'
+     6	import { HunkHeader } from './hunk-header'
+     7	
+     8	const LINE_HEIGHT = 24 // leading-6 = 1.5rem = 24px
+     9	const HUNK_HEADER_HEIGHT = 24
+    10	
+    11	interface FileDiffProps {
+    12	  file: DiffFile
+    13	}
+    14	
+    15	interface RowComponentProps {
+    16	  index: number
+    17	  style: React.CSSProperties
+    18	  rows: DiffRow[]
+    19	  tokenMap: Map<number, HighlightToken[]>
+    20	}
+ succeeded in 52ms:
+     1	import { useState, useEffect, useCallback } from 'react'
+     2	import React from 'react'
+     3	import { List } from 'react-window'
+     4	import { parseHunks, langFromFilename, type DiffFile } from '@/lib/diff-types'
+     5	import { hunksToSplitRows, type SplitRow } from '@/lib/split-diff'
+     6	import { highlight, type HighlightToken } from '@/lib/highlight'
+     7	import { HunkHeader } from './hunk-header'
+     8	
+     9	const LINE_HEIGHT = 24
+    10	const HUNK_HEADER_HEIGHT = 24
+    11	
+    12	interface SplitViewProps {
+    13	  file: DiffFile
+    14	}
+    15	
+    16	interface SplitRowComponentProps {
+    17	  index: number
+    18	  style: React.CSSProperties
+    19	  rows: SplitRow[]
+    20	  leftTokenMap: Map<number, HighlightToken[]>
+exec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && nl -ba src/components/flow/beat-list.tsx' in /Users/e/.superset/worktrees/reviewurr/initialize-projectexec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && nl -ba src/components/file-tree.tsx' in /Users/e/.superset/worktrees/reviewurr/initialize-projectexec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && nl -ba src/components/diff-renderer/line.tsx' in /Users/e/.superset/worktrees/reviewurr/initialize-project succeeded in 52ms:
+     1	import React from 'react'
+     2	import type { DiffChange } from '@/lib/diff-types'
+     3	import type { HighlightToken } from '@/lib/highlight'
+     4	
+     5	interface LineProps {
+     6	  change: DiffChange
+     7	  tokens?: HighlightToken[]
+     8	}
+     9	
+    10	export const Line = React.memo(function Line({ change, tokens }: LineProps) {
+    11	  const bgClass =
+    12	    change.type === 'add'
+    13	      ? 'bg-gh-green/10'
+    14	      : change.type === 'del'
+    15	        ? 'bg-gh-red/10'
+    16	        : ''
+    17	
+    18	  const indicatorClass =
+    19	    change.type === 'add'
+    20	      ? 'text-gh-green'
+ succeeded in 52ms:
+     1	import { useState, useEffect } from 'react'
+     2	import type { DiffFile } from '@/lib/diff-types'
+     3	import { BeatCard, type Beat } from './beat-card'
+     4	import { analyzePR, getCachedBeats, clearBeats } from '@/server/analysis'
+     5	
+     6	interface BeatListProps {
+     7	  prId: number
+     8	  files: DiffFile[]
+     9	  model?: string
+    10	}
+    11	
+    12	export function BeatList({ prId, files, model = 'claude-sonnet' }: BeatListProps) {
+    13	  const [beats, setBeats] = useState<Beat[] | null>(null)
+    14	  const [loading, setLoading] = useState(true)
+    15	  const [analyzing, setAnalyzing] = useState(false)
+    16	  const [error, setError] = useState<string | null>(null)
+    17	
+    18	  // Check for cached beats on mount and when model changes
+    19	  useEffect(() => {
+    20	    let cancelled = false
+ succeeded in 52ms:
+     1	import { useState, useEffect, useRef, useCallback } from 'react'
+     2	import type { DiffFile } from '@/lib/diff-types'
+     3	import { buildFileTree, type FileTreeNode } from '@/lib/file-tree'
+     4	
+     5	interface FileTreeProps {
+     6	  files: DiffFile[]
+     7	}
+     8	
+     9	export function FileTree({ files }: FileTreeProps) {
+    10	  const [tree] = useState(() => buildFileTree(files))
+    11	  const [activeFile, setActiveFile] = useState<string | null>(null)
+    12	  const observerRef = useRef<IntersectionObserver | null>(null)
+    13	
+    14	  // Set up IntersectionObserver to track which file diff is visible
+    15	  useEffect(() => {
+    16	    const elements = files
+    17	      .map((f) => document.getElementById(`file-${encodeURIComponent(f.filename)}`))
+    18	      .filter(Boolean) as HTMLElement[]
+    19	
+    20	    if (elements.length === 0) return
+exec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && nl -ba src/components/flow/model-selector.tsx' in /Users/e/.superset/worktrees/reviewurr/initialize-projectexec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && nl -ba src/components/flow/beat-card.tsx' in /Users/e/.superset/worktrees/reviewurr/initialize-projectexec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && nl -ba src/lib/detect-refs.ts' in /Users/e/.superset/worktrees/reviewurr/initialize-project succeeded in 52ms:
+     1	import { useState, useEffect } from 'react'
+     2	import { checkCodexAvailable } from '@/server/analysis'
+     3	
+     4	export type ModelOption = 'claude-sonnet' | 'codex'
+     5	
+     6	interface ModelSelectorProps {
+     7	  value: ModelOption
+     8	  onChange: (model: ModelOption) => void
+     9	}
+    10	
+    11	export function ModelSelector({ value, onChange }: ModelSelectorProps) {
+    12	  const [codexAvailable, setCodexAvailable] = useState<boolean | null>(null)
+    13	
+    14	  useEffect(() => {
+    15	    checkCodexAvailable()
+    16	      .then((result) => setCodexAvailable(result.available))
+    17	      .catch(() => setCodexAvailable(false))
+    18	  }, [])
+    19	
+    20	  return (
+ succeeded in 52ms:
+     1	import { useState } from 'react'
+     2	import type { DiffFile } from '@/lib/diff-types'
+     3	import type { RefLink } from '@/lib/detect-refs'
+     4	import { FileDiff } from '@/components/diff-renderer/file-diff'
+     5	
+     6	interface BeatHunk {
+     7	  file_path: string
+     8	  hunk_spec: string
+     9	}
+    10	
+    11	export interface Beat {
+    12	  id: number
+    13	  title: string
+    14	  description: string
+    15	  reading_order: number
+    16	  refs: RefLink[]
+    17	  hunks: BeatHunk[]
+    18	}
+    19	
+    20	interface BeatCardProps {
+ succeeded in 51ms:
+     1	export interface RefLink {
+     2	  type: 'jira' | 'url' | 'doc'
+     3	  value: string
+     4	  display: string
+     5	}
+     6	
+     7	/** Scan text for references: Jira/Linear keys, URLs, doc paths */
+     8	export function detectRefs(text: string): RefLink[] {
+     9	  const refs: RefLink[] = []
+    10	  const seen = new Set<string>()
+    11	
+    12	  // URLs
+    13	  const urlRe = /https?:\/\/[^\s)]+/g
+    14	  for (const m of text.matchAll(urlRe)) {
+    15	    if (!seen.has(m[0])) {
+    16	      seen.add(m[0])
+    17	      refs.push({ type: 'url', value: m[0], display: m[0] })
+    18	    }
+    19	  }
+    20	
+exec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && nl -ba src/components/pr-list.tsx' in /Users/e/.superset/worktrees/reviewurr/initialize-projectexec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && nl -ba src/lib/file-tree.ts' in /Users/e/.superset/worktrees/reviewurr/initialize-projectexec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && nl -ba src/components/pr-input.tsx' in /Users/e/.superset/worktrees/reviewurr/initialize-project succeeded in 51ms:
+     1	import { Link } from '@tanstack/react-router'
+     2	import { timeAgo } from '@/lib/time-ago'
+     3	
+     4	interface CachedPR {
+     5	  id: number
+     6	  owner: string
+     7	  repo: string
+     8	  number: number
+     9	  title: string
+    10	  additions: number
+    11	  deletions: number
+    12	  fetched_at: string
+    13	}
+    14	
+    15	export function PRList({ prs }: { prs: CachedPR[] }) {
+    16	  if (prs.length === 0) {
+    17	    return <p className="text-gh-text/40 text-sm">No recent reviews yet.</p>
+    18	  }
+    19	
+    20	  return (
+ succeeded in 51ms:
+     1	import { useState } from 'react'
+     2	import { useNavigate } from '@tanstack/react-router'
+     3	import { parsePRUrl } from '@/lib/diff-types'
+     4	import { fetchPR } from '@/server/pr'
+     5	
+     6	export function PRInput() {
+     7	  const [url, setUrl] = useState('')
+     8	  const [error, setError] = useState<string | null>(null)
+     9	  const [loading, setLoading] = useState(false)
+    10	  const navigate = useNavigate()
+    11	
+    12	  async function handleSubmit(e: React.FormEvent) {
+    13	    e.preventDefault()
+    14	    setError(null)
+    15	
+    16	    const parsed = parsePRUrl(url)
+    17	    if (!parsed) {
+    18	      setError('Invalid GitHub PR URL. Expected format: https://github.com/owner/repo/pull/123')
+    19	      return
+    20	    }
+ succeeded in 51ms:
+     1	import type { DiffFile } from './diff-types'
+     2	
+     3	/** A node in the file tree */
+     4	export interface FileTreeNode {
+     5	  /** Display name (may be compressed path like "src/lib") */
+     6	  name: string
+     7	  /** Full path from root */
+     8	  path: string
+     9	  /** Child nodes (present for directories) */
+    10	  children?: FileTreeNode[]
+    11	  /** Associated diff file (present for leaf files) */
+    12	  file?: DiffFile
+    13	}
+    14	
+    15	/** Build a file tree from a flat list of DiffFiles */
+    16	export function buildFileTree(files: DiffFile[]): FileTreeNode[] {
+    17	  const root: FileTreeNode = { name: '', path: '', children: [] }
+    18	
+    19	  for (const file of files) {
+    20	    const segments = file.filename.split('/')
+codex
+I’m now checking utility/worker code paths for subtle runtime issues (parsing, escaping, race conditions, and unhandled state transitions) that tests often miss.
+exec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && nl -ba src/workers/highlighter.worker.ts' in /Users/e/.superset/worktrees/reviewurr/initialize-projectexec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && nl -ba src/workers/diff-parser.worker.ts' in /Users/e/.superset/worktrees/reviewurr/initialize-project succeeded in 52ms:
+     1	import { createHighlighter, type Highlighter } from 'shiki/bundle/web'
+     2	
+     3	let highlighter: Highlighter | null = null
+     4	let initPromise: Promise<Highlighter> | null = null
+     5	const loadedLangs = new Set<string>()
+     6	
+     7	async function getHighlighter(): Promise<Highlighter> {
+     8	  if (highlighter) return highlighter
+     9	  if (initPromise) return initPromise
+    10	  initPromise = createHighlighter({
+    11	    themes: ['github-dark'],
+    12	    langs: [],
+    13	  })
+    14	  highlighter = await initPromise
+    15	  return highlighter
+    16	}
+    17	
+    18	self.onmessage = async (
+    19	  e: MessageEvent<{ id: string; code: string; lang: string }>
+    20	) => {
+ succeeded in 52ms:
+     1	import { parseHunks } from '@/lib/diff-types'
+     2	
+     3	self.onmessage = (e: MessageEvent<{ id: string; diffContent: string }>) => {
+     4	  const { id, diffContent } = e.data
+     5	  const hunks = parseHunks(diffContent)
+     6	  self.postMessage({ id, hunks })
+     7	}
+exec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && nl -ba src/lib/time-ago.ts' in /Users/e/.superset/worktrees/reviewurr/initialize-project succeeded in 51ms:
+     1	/** Returns a human-readable relative time string from a date string */
+     2	export function timeAgo(dateStr: string): string {
+     3	  const now = Date.now()
+     4	  const then = new Date(dateStr + (dateStr.endsWith('Z') ? '' : 'Z')).getTime()
+     5	  const seconds = Math.floor((now - then) / 1000)
+     6	
+     7	  if (seconds < 60) return 'just now'
+     8	  const minutes = Math.floor(seconds / 60)
+     9	  if (minutes < 60) return `${minutes}m ago`
+    10	  const hours = Math.floor(minutes / 60)
+    11	  if (hours < 24) return `${hours}h ago`
+    12	  const days = Math.floor(hours / 24)
+    13	  if (days < 30) return `${days}d ago`
+    14	  const months = Math.floor(days / 30)
+    15	  return `${months}mo ago`
+    16	}
+    17	
+    18	/** Pure comparison: returns true if the SHAs differ */
+    19	export function hasShaChanged(storedSha: string, currentSha: string): boolean {
+    20	  return storedSha !== currentSha
+exec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && nl -ba tests/diff-types.test.ts' in /Users/e/.superset/worktrees/reviewurr/initialize-projectexec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && nl -ba tests/split-diff.test.ts' in /Users/e/.superset/worktrees/reviewurr/initialize-projectexec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && nl -ba tests/file-tree.test.ts' in /Users/e/.superset/worktrees/reviewurr/initialize-project succeeded in 52ms:
+     1	import { describe, it, expect } from 'vitest'
+     2	import { parsePRUrl, parseDiff } from '@/lib/diff-types'
+     3	
+     4	describe('parsePRUrl', () => {
+     5	  it('parses a standard GitHub PR URL', () => {
+     6	    const result = parsePRUrl('https://github.com/facebook/react/pull/42')
+     7	    expect(result).toEqual({ owner: 'facebook', repo: 'react', number: 42 })
+     8	  })
+     9	
+    10	  it('parses URL with trailing path segments', () => {
+    11	    const result = parsePRUrl('https://github.com/owner/repo/pull/123/files')
+    12	    expect(result).toEqual({ owner: 'owner', repo: 'repo', number: 123 })
+    13	  })
+    14	
+    15	  it('parses URL with query params', () => {
+    16	    const result = parsePRUrl('https://github.com/owner/repo/pull/5?diff=split')
+    17	    expect(result).toEqual({ owner: 'owner', repo: 'repo', number: 5 })
+    18	  })
+    19	
+    20	  it('returns null for non-GitHub URLs', () => {
+ succeeded in 52ms:
+     1	import { describe, it, expect } from 'vitest'
+     2	import { hunksToSplitRows, type SplitRow } from '@/lib/split-diff'
+     3	import type { DiffHunk, DiffChange } from '@/lib/diff-types'
+     4	
+     5	function ctx(oldLine: number, newLine: number, content: string): DiffChange {
+     6	  return { type: 'context', oldLine, newLine, content }
+     7	}
+     8	function add(newLine: number, content: string): DiffChange {
+     9	  return { type: 'add', newLine, content }
+    10	}
+    11	function del(oldLine: number, content: string): DiffChange {
+    12	  return { type: 'del', oldLine, content }
+    13	}
+    14	
+    15	function makeHunk(changes: DiffChange[]): DiffHunk {
+    16	  return { oldStart: 1, oldLines: 10, newStart: 1, newLines: 10, header: '@@ -1,10 +1,10 @@', changes }
+    17	}
+    18	
+    19	describe('hunksToSplitRows', () => {
+    20	  it('returns hunk header as first row', () => {
+ succeeded in 52ms:
+     1	import { describe, it, expect } from 'vitest'
+     2	import { buildFileTree } from '@/lib/file-tree'
+     3	import type { DiffFile } from '@/lib/diff-types'
+     4	
+     5	function makeDiffFile(filename: string): DiffFile {
+     6	  return { filename, additions: 1, deletions: 1, content: '' }
+     7	}
+     8	
+     9	describe('buildFileTree', () => {
+    10	  it('returns empty array for no files', () => {
+    11	    expect(buildFileTree([])).toEqual([])
+    12	  })
+    13	
+    14	  it('creates flat file nodes for root-level files', () => {
+    15	    const files = [makeDiffFile('a.ts'), makeDiffFile('b.ts')]
+    16	    const tree = buildFileTree(files)
+    17	
+    18	    expect(tree).toHaveLength(2)
+    19	    expect(tree[0].name).toBe('a.ts')
+    20	    expect(tree[0].file?.filename).toBe('a.ts')
+exec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && nl -ba tests/update-detection.test.ts' in /Users/e/.superset/worktrees/reviewurr/initialize-projectexec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && nl -ba tests/model-settings.test.ts' in /Users/e/.superset/worktrees/reviewurr/initialize-projectexec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && nl -ba tests/detect-refs.test.ts' in /Users/e/.superset/worktrees/reviewurr/initialize-project succeeded in 52ms:
+     1	import { describe, it, expect } from 'vitest'
+     2	import { timeAgo, hasShaChanged } from '@/lib/time-ago'
+     3	
+     4	describe('hasShaChanged', () => {
+     5	  it('returns false when SHAs are identical', () => {
+     6	    const sha = 'abc123def456'
+     7	    expect(hasShaChanged(sha, sha)).toBe(false)
+     8	  })
+     9	
+    10	  it('returns true when SHAs differ', () => {
+    11	    expect(hasShaChanged('abc123', 'def456')).toBe(true)
+    12	  })
+    13	
+    14	  it('returns true for prefix match (not full match)', () => {
+    15	    expect(hasShaChanged('abc123', 'abc1234')).toBe(true)
+    16	  })
+    17	
+    18	  it('handles empty strings', () => {
+    19	    expect(hasShaChanged('', '')).toBe(false)
+    20	    expect(hasShaChanged('abc', '')).toBe(true)
+ succeeded in 52ms:
+     1	import { describe, it, expect } from 'vitest'
+     2	import { detectRefs } from '@/lib/detect-refs'
+     3	
+     4	describe('detectRefs', () => {
+     5	  it('returns empty array for text with no refs', () => {
+     6	    expect(detectRefs('just a plain description')).toEqual([])
+     7	  })
+     8	
+     9	  it('detects Jira/Linear keys', () => {
+    10	    const refs = detectRefs('Fixed PROJ-123 and DATA-45')
+    11	    expect(refs).toHaveLength(2)
+    12	    expect(refs[0]).toEqual({ type: 'jira', value: 'PROJ-123', display: 'PROJ-123' })
+    13	    expect(refs[1]).toEqual({ type: 'jira', value: 'DATA-45', display: 'DATA-45' })
+    14	  })
+    15	
+    16	  it('detects URLs', () => {
+    17	    const refs = detectRefs('See https://example.com/docs for more')
+    18	    expect(refs).toHaveLength(1)
+    19	    expect(refs[0]).toEqual({ type: 'url', value: 'https://example.com/docs', display: 'https://example.com/docs' })
+    20	  })
+ succeeded in 52ms:
+     1	import { describe, it, expect, vi, beforeEach } from 'vitest'
+     2	
+     3	// Mock bun:sqlite before importing db module
+     4	const store = new Map<string, string>()
+     5	
+     6	vi.mock('bun:sqlite', () => {
+     7	  class MockDatabase {
+     8	    run(sql: string, params?: any[]) {
+     9	      if (sql.includes('INSERT INTO settings') && params) {
+    10	        store.set(params[0], params[1])
+    11	      }
+    12	      return { lastInsertRowid: 1 }
+    13	    }
+    14	    query(sql: string) {
+    15	      return {
+    16	        get: (...args: any[]) => {
+    17	          if (sql.includes('SELECT value FROM settings')) {
+    18	            const val = store.get(args[0])
+    19	            return val != null ? { value: val } : null
+    20	          }
+exec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && nl -ba tests/diff-parser.test.ts' in /Users/e/.superset/worktrees/reviewurr/initialize-projectexec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && nl -ba tests/smoke.test.tsx' in /Users/e/.superset/worktrees/reviewurr/initialize-projectexec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && nl -ba vitest.config.ts' in /Users/e/.superset/worktrees/reviewurr/initialize-project succeeded in 52ms:
+     1	import { describe, it, expect } from 'vitest'
+     2	import { render, screen } from '@testing-library/react'
+     3	import { createElement } from 'react'
+     4	
+     5	// Smoke test: verify React renders and core dependencies work
+     6	describe('smoke', () => {
+     7	  it('renders a basic React component', () => {
+     8	    function App() {
+     9	      return createElement('h1', null, 'reviewurr')
+    10	    }
+    11	    render(createElement(App))
+    12	    expect(screen.getByText('reviewurr')).toBeInTheDocument()
+    13	  })
+    14	
+    15	  it('cn utility merges classes correctly', async () => {
+    16	    const { cn } = await import('@/lib/utils')
+    17	    expect(cn('px-2', 'px-4')).toBe('px-4')
+    18	    expect(cn('text-red-500', 'bg-blue-500')).toBe('text-red-500 bg-blue-500')
+    19	  })
+    20	})
+ succeeded in 52ms:
+     1	import { describe, it, expect } from 'vitest'
+     2	import { parseHunks, hunksToRows, langFromFilename } from '@/lib/diff-types'
+     3	
+     4	const sampleFileDiff = `diff --git a/src/app.ts b/src/app.ts
+     5	index abc1234..def5678 100644
+     6	--- a/src/app.ts
+     7	+++ b/src/app.ts
+     8	@@ -1,3 +1,4 @@
+     9	 import express from 'express'
+    10	+import cors from 'cors'
+    11	 const app = express()
+    12	-app.listen(3000)
+    13	+app.listen(8080)`
+    14	
+    15	describe('parseHunks', () => {
+    16	  it('parses a single hunk with add, del, and context lines', () => {
+    17	    const hunks = parseHunks(sampleFileDiff)
+    18	    expect(hunks).toHaveLength(1)
+    19	    expect(hunks[0].oldStart).toBe(1)
+    20	    expect(hunks[0].oldLines).toBe(3)
+ succeeded in 51ms:
+     1	import { defineConfig } from 'vitest/config'
+     2	import tsconfigPaths from 'vite-tsconfig-paths'
+     3	
+     4	export default defineConfig({
+     5	  plugins: [tsconfigPaths()],
+     6	  test: {
+     7	    environment: 'jsdom',
+     8	    include: ['tests/**/*.test.{ts,tsx}'],
+     9	    globals: true,
+    10	    setupFiles: ['./tests/setup.ts'],
+    11	  },
+    12	})
+exec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && nl -ba src/router.tsx' in /Users/e/.superset/worktrees/reviewurr/initialize-projectexec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && nl -ba vite.config.ts' in /Users/e/.superset/worktrees/reviewurr/initialize-projectexec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && nl -ba src/lib/utils.ts' in /Users/e/.superset/worktrees/reviewurr/initialize-project succeeded in 51ms:
+     1	import { createRouter } from '@tanstack/react-router'
+     2	import { routeTree } from './routeTree.gen'
+     3	
+     4	export function getRouter() {
+     5	  const router = createRouter({
+     6	    routeTree,
+     7	    scrollRestoration: true,
+     8	  })
+     9	
+    10	  return router
+    11	}
+    12	
+    13	declare module '@tanstack/react-router' {
+    14	  interface Register {
+    15	    router: ReturnType<typeof getRouter>
+    16	  }
+    17	}
+ succeeded in 51ms:
+     1	import { defineConfig } from 'vite'
+     2	import { tanstackStart } from '@tanstack/react-start/plugin/vite'
+     3	import viteReact from '@vitejs/plugin-react'
+     4	import tsconfigPaths from 'vite-tsconfig-paths'
+     5	import tailwindcss from '@tailwindcss/vite'
+     6	
+     7	export default defineConfig({
+     8	  server: {
+     9	    port: 3000,
+    10	  },
+    11	  worker: {
+    12	    format: 'es',
+    13	  },
+    14	  plugins: [
+    15	    tailwindcss(),
+    16	    tsconfigPaths(),
+    17	    tanstackStart(),
+    18	    viteReact(),
+    19	  ],
+    20	})
+ succeeded in 50ms:
+     1	import { type ClassValue, clsx } from 'clsx'
+     2	import { twMerge } from 'tailwind-merge'
+     3	
+     4	export function cn(...inputs: ClassValue[]) {
+     5	  return twMerge(clsx(inputs))
+     6	}
+exec
+/bin/zsh -lc "cd /Users/e/.superset/worktrees/reviewurr/initialize-project && nl -ba src/routeTree.gen.ts | sed -n '1,220p'" in /Users/e/.superset/worktrees/reviewurr/initialize-project succeeded in 51ms:
+     1	/* eslint-disable */
+     2	
+     3	// @ts-nocheck
+     4	
+     5	// noinspection JSUnusedGlobalSymbols
+     6	
+     7	// This file was automatically generated by TanStack Router.
+     8	// You should NOT make any changes in this file as it will be overwritten.
+     9	// Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
+    10	
+    11	import { Route as rootRouteImport } from './routes/__root'
+    12	import { Route as IndexRouteImport } from './routes/index'
+    13	import { Route as PrIdRouteImport } from './routes/pr.$id'
+    14	
+    15	const IndexRoute = IndexRouteImport.update({
+    16	  id: '/',
+    17	  path: '/',
+    18	  getParentRoute: () => rootRouteImport,
+    19	} as any)
+    20	const PrIdRoute = PrIdRouteImport.update({
+exec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && nl -ba src/styles/app.css' in /Users/e/.superset/worktrees/reviewurr/initialize-project succeeded in 52ms:
+     1	@import "tailwindcss";
+     2	
+     3	@theme {
+     4	  --color-gh-bg: #0d1117;
+     5	  --color-gh-secondary: #161b22;
+     6	  --color-gh-text: #c9d1d9;
+     7	  --color-gh-accent: #58a6ff;
+     8	  --color-gh-green: #3fb950;
+     9	  --color-gh-red: #f85149;
+    10	  --color-gh-tertiary: #21262d;
+    11	}
+exec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && npx tsc --noEmit' in /Users/e/.superset/worktrees/reviewurr/initialize-project exited 2 in 1.69s:
+src/components/diff-renderer/file-diff.tsx(119,13): error TS2739: Type '{ rows: DiffRow[]; tokenMap: Map<number, HighlightToken[]>; }' is missing the following properties from type 'ExcludeForbiddenKeys_2<RowComponentProps>': index, style
+src/components/diff-renderer/split-view.tsx(180,13): error TS2739: Type '{ rows: SplitRow[]; leftTokenMap: Map<number, HighlightToken[]>; rightTokenMap: Map<number, HighlightToken[]>; }' is missing the following properties from type 'ExcludeForbiddenKeys_2<SplitRowComponentProps>': index, style
+src/components/flow/beat-list.tsx(24,14): error TS7006: Parameter 'cached' implicitly has an 'any' type.
+src/lib/file-tree.ts(70,9): error TS18048: 'node.children' is possibly 'undefined'.
+src/lib/file-tree.ts(71,9): error TS18048: 'node.children' is possibly 'undefined'.
+src/lib/file-tree.ts(73,15): error TS7022: 'child' implicitly has type 'any' because it does not have a type annotation and is referenced directly or indirectly in its own initializer.
+src/lib/file-tree.ts(73,23): error TS18048: 'node.children' is possibly 'undefined'.
+src/lib/file-tree.ts(79,20): error TS2345: Argument of type 'FileTreeNode[] | undefined' is not assignable to parameter of type 'FileTreeNode[]'.
+  Type 'undefined' is not assignable to type 'FileTreeNode[]'.
+src/routes/__root.tsx(9,20): error TS2307: Cannot find module '@/styles/app.css?url' or its corresponding type declarations.
+src/routes/pr.$id.tsx(44,14): error TS7006: Parameter 'result' implicitly has an 'any' type.
+src/server/analysis.ts(182,4): error TS2339: Property 'validator' does not exist on type 'ServerFnBuilder<Register, "POST">'.
+src/server/analysis.ts(183,29): error TS7031: Binding element 'model' implicitly has an 'any' type.
+src/server/analysis.ts(190,4): error TS2339: Property 'validator' does not exist on type 'ServerFnBuilder<Register, "POST">'.
+src/server/analysis.ts(191,29): error TS7031: Binding element 'prId' implicitly has an 'any' type.
+src/server/analysis.ts(191,42): error TS7031: Binding element 'requestedModel' implicitly has an 'any' type.
+src/server/analysis.ts(310,4): error TS2339: Property 'validator' does not exist on type 'ServerFnBuilder<Register, "GET">'.
+src/server/analysis.ts(311,29): error TS7031: Binding element 'prId' implicitly has an 'any' type.
+src/server/analysis.ts(311,35): error TS7031: Binding element 'model' implicitly has an 'any' type.
+src/server/analysis.ts(318,4): error TS2339: Property 'validator' does not exist on type 'ServerFnBuilder<Register, "POST">'.
+exec
+/bin/zsh -lc "cd /Users/e/.superset/worktrees/reviewurr/initialize-project && rg \"createServerFn\\(|\\.validator\\(\" src -n" in /Users/e/.superset/worktrees/reviewurr/initialize-project succeeded in 51ms:
+src/server/analysis.ts:167:export const checkCodexAvailable = createServerFn({ method: 'GET' })
+src/server/analysis.ts:174:export const getPreferredModel = createServerFn({ method: 'GET' })
+src/server/analysis.ts:181:export const setPreferredModel = createServerFn({ method: 'POST' })
+src/server/analysis.ts:182:  .validator((d: { model: string }) => d)
+src/server/analysis.ts:189:export const analyzePR = createServerFn({ method: 'POST' })
+src/server/analysis.ts:190:  .validator((d: { prId: number; model?: string }) => d)
+src/server/analysis.ts:309:export const getCachedBeats = createServerFn({ method: 'GET' })
+src/server/analysis.ts:310:  .validator((d: { prId: number; model?: string }) => d)
+src/server/analysis.ts:317:export const clearBeats = createServerFn({ method: 'POST' })
+src/server/analysis.ts:318:  .validator((d: { prId: number; model?: string }) => d)
+src/server/pr.ts:17:export const fetchPR = createServerFn({ method: 'POST' })
+src/server/pr.ts:18:  .validator((d: { owner: string; repo: string; number: number }) => d)
+src/server/pr.ts:82:export const getPRData = createServerFn({ method: 'GET' })
+src/server/pr.ts:83:  .validator((d: number) => d)
+src/server/pr.ts:96:export const getCachedPRs = createServerFn({ method: 'GET' })
+src/server/pr.ts:102:export const checkPRUpdate = createServerFn({ method: 'POST' })
+src/server/pr.ts:103:  .validator((d: { prId: number }) => d)
+codex
+I’ve found substantial TypeScript/API mismatches. I’m validating whether these are type-only issues or true runtime breakages by checking the installed `createServerFn` typings/implementation next.
+exec
+/bin/zsh -lc "cd /Users/e/.superset/worktrees/reviewurr/initialize-project && rg \"createServerFn\" node_modules/@tanstack/react-start -n | sed -n '1,80p'" in /Users/e/.superset/worktrees/reviewurr/initialize-projectexec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && rg "interface ServerFnBuilder|class ServerFnBuilder|type ServerFnBuilder" node_modules/@tanstack -n' in /Users/e/.superset/worktrees/reviewurr/initialize-projectexec
+/bin/zsh -lc "cd /Users/e/.superset/worktrees/reviewurr/initialize-project && rg \"validator\\(\" node_modules/@tanstack -n | sed -n '1,120p'" in /Users/e/.superset/worktrees/reviewurr/initialize-project succeeded in 51ms:
+
+ succeeded in 50ms:
+node_modules/@tanstack/start-client-core/src/createServerFn.ts:635:export interface ServerFnBuilder<TRegister, TMethod extends Method = 'GET'>
+ succeeded in 51ms:
+node_modules/@tanstack/start-client-core/src/createServerFn.ts:769:    return validator(input)
+exec
+/bin/zsh -lc "cd /Users/e/.superset/worktrees/reviewurr/initialize-project && nl -ba node_modules/@tanstack/start-client-core/src/createServerFn.ts | sed -n '620,760p'" in /Users/e/.superset/worktrees/reviewurr/initialize-project succeeded in 52ms:
+   620	  TMethod extends Method,
+   621	  TMiddlewares,
+   622	  TInputValidator,
+   623	> {
+   624	  handler: <TNewResponse>(
+   625	    fn?: ServerFn<
+   626	      TRegister,
+   627	      TMethod,
+   628	      TMiddlewares,
+   629	      TInputValidator,
+   630	      TNewResponse
+   631	    >,
+   632	  ) => Fetcher<TMiddlewares, TInputValidator, TNewResponse>
+   633	}
+   634	
+   635	export interface ServerFnBuilder<TRegister, TMethod extends Method = 'GET'>
+   636	  extends
+   637	    ServerFnWithTypes<TRegister, TMethod, undefined, undefined, undefined>,
+   638	    ServerFnMiddleware<TRegister, TMethod, undefined, undefined>,
+   639	    ServerFnValidator<TRegister, TMethod, undefined>,
+exec
+/bin/zsh -lc "cd /Users/e/.superset/worktrees/reviewurr/initialize-project && rg \"validator\\s*:\\s*|validator\\(\" node_modules/@tanstack/start-client-core/src/createServerFn.ts -n | sed -n '1,120p'" in /Users/e/.superset/worktrees/reviewurr/initialize-project succeeded in 51ms:
+750:  validator: AnyValidator,
+769:    return validator(input)
+exec
+/bin/zsh -lc "cd /Users/e/.superset/worktrees/reviewurr/initialize-project && nl -ba node_modules/@tanstack/start-client-core/src/createServerFn.ts | sed -n '520,620p'" in /Users/e/.superset/worktrees/reviewurr/initialize-project succeeded in 51ms:
+   520	      ? readonly [...TMiddlewares, ...TNewMiddlewares]
+   521	      : TMiddlewares
+   522	    : TNewMiddlewares
+   523	
+   524	export interface ServerFnMiddleware<
+   525	  TRegister,
+   526	  TMethod extends Method,
+   527	  TMiddlewares,
+   528	  TInputValidator,
+   529	> {
+   530	  middleware: <const TNewMiddlewares>(
+   531	    middlewares: Constrain<
+   532	      TNewMiddlewares,
+   533	      ReadonlyArray<AnyFunctionMiddleware | AnyRequestMiddleware | AnyServerFn>
+   534	    >,
+   535	  ) => ServerFnAfterMiddleware<
+   536	    TRegister,
+   537	    TMethod,
+   538	    AppendMiddlewares<TMiddlewares, TNewMiddlewares>,
+   539	    TInputValidator
+exec
+/bin/zsh -lc "cd /Users/e/.superset/worktrees/reviewurr/initialize-project && rg \"validator|inputValidator\" node_modules/@tanstack/start-client-core/dist -n | sed -n '1,120p'" in /Users/e/.superset/worktrees/reviewurr/initialize-project succeeded in 51ms:
+Total output lines: 26
+
+node_modules/@tanstack/start-client-core/dist/esm/createMiddleware.js:14:    inputValidator: (inputValidator) => {
+node_modules/@tanstack/start-client-core/dist/esm/createMiddleware.js:17:        Object.assign(resolvedOptions, { inputValidator })
+node_modules/@tanstack/start-client-core/dist/esm/createServerFn.d.ts:67:    inputValidator?: ConstrainValidator<TRegister, TMethod, TInputValidator>;
+node_modules/@tanstack/start-client-core/dist/esm/createServerFn.d.ts:83:export type ValidatorFn<TRegister, TMethod extends Method, TMiddlewares> = <TInputValidator>(inputValidator: ConstrainValidator<TRegister, TMethod, TInputValidator>) => ServerFnAfterValidator<TRegister, TMethod, TMiddlewares, TInputValidator>;
+node_modules/@tanstack/start-client-core/dist/esm/createServerFn.d.ts:85:    inputValidator: ValidatorFn<TRegister, TMethod, TMiddlewares>;
+node_modules/@tanstack/start-client-core/dist/esm/createServerFn.d.ts:106:    inputValidator: TInputValidator;
+node_modules/@tanstack/start-client-core/dist/esm/createServerFn.d.ts:131:export declare function execValidator(validator: AnyValidator, input: unknown): Promise<unknown>;
+node_modules/@tanstack/start-client-core/dist/esm/createServerFn.js.map:1:{"version":3,"file":"createServerFn.js","sources":["../../src/createServerFn.ts"],"sourcesContent":["import { mergeHeaders } from '@tanstack/router-core/ssr/client'\n\nimport { isRedirect, parseRedirect } from '@tanstack/router-core'\nimport { TSS_SERVER_FUNCTION_FACTORY } from './constants'\nimport { getStartOptions } from './getStartOptions'\nimport { getStartContextServerOnly } from './getStartContextServerOnly'\nimport { createNullProtoObject, safeObjectMerge } from './safeObjectMerge'\nimport type {\n  ClientFnMeta,\n  ServerFnMeta,\n  TSS_SERVER_FUNCTION,\n} from './constants'\nimport type {\n  AnyValidator,\n  Constrain,\n  Expand,\n  Register,\n  RegisteredSerializableInput,\n  ResolveValidatorInput,\n  ValidateSerializable,\n  ValidateSerializableInput,\n  Validator,\n} from '@tanstack/router-core'\nimport type {\n  AnyFunctionMiddleware,\n  AnyRequestMiddleware,\n  AssignAllServerFnContext,\n  FunctionMiddlewareServerFnResult,\n  IntersectAllValidatorInputs,\n  IntersectAllValidatorOutputs,\n} from './createMiddleware'\n\ntype TODO = any\n\nexport type CreateServerFn<TRegister> = <\n  TMethod extends Method,\n  TResponse = unknown,\n  TMiddlewares = undefined,\n  TInputValidator = undefined,\n>(\n  options?: {\n    method?: TMethod\n  },\n  __opts?: ServerFnBaseOptions<\n    TRegister,\n    TMethod,\n    TResponse,\n    TMiddlewares,\n    TInputValidator\n  >,\n) => ServerFnBuilder<TRegister, TMethod>\n\nexport const createServerFn: CreateServerFn<Register> = (options, __opts) => {\n  const resolvedOptions = (__opts || options || {}) as ServerFnBaseOptions<\n    any,\n    any,\n    any,\n    any,\n    any\n  >\n\n  if (typeof resolvedOptions.method === 'undefined') {\n    resolvedOptions.method = 'GET' as Method\n  }\n\n  const res: ServerFnBuilder<Register, Method> = {\n    options: resolvedOptions,\n    middleware: (middleware) => {\n      // multiple calls to `middleware()` merge the middlewares with the previously supplied ones\n      // this is primarily useful for letting users create their own abstractions on top of `createServerFn`\n\n      const newMiddleware = [...(resolvedOptions.middleware || [])]\n      middleware.map((m) => {\n        if (TSS_SERVER_FUNCTION_FACTORY in m) {\n          if (m.options.middleware) {\n            newMiddleware.push(...m.options.middleware)\n          }\n        } else {\n          newMiddleware.push(m)\n        }\n      })\n\n      const newOptions = {\n        ...resolvedOptions,\n        middleware: newMiddleware,\n      }\n      const res = createServerFn(undefined, newOptions) as any\n      res[TSS_SERVER_FUNCTION_FACTORY] = true\n      return res\n    },\n    inputValidator: (inputValidator) => {\n      const newOptions = { ...resolvedOptions, inputValidator }\n      return createServerFn(undefined, newOptions) as any\n    },\n    handler: (...args) => {\n      // This function signature changes due to AST transformations\n      // in the babel plugin. We need to cast it to the correct\n      // function signature post-transformation\n      const [extractedFn, serverFn] = args as unknown as [\n        CompiledFetcherFn<Register, any>,\n        ServerFn<Register, Method, any, any, any>,\n      ]\n\n      // Keep the original function around so we can use it\n      // in the server environment\n      const newOptions = { ...resolvedOptions, extractedFn, serverFn }\n\n      const resolvedMiddleware = [\n        ...(newOptions.middleware || []),\n        serverFnBaseToMiddleware(newOptions),\n      ]\n\n      // We want to make sure the new function has the same\n      // properties as the original function\n\n      // Propagate the declared HTTP method onto the extracted handler\n      // so the manifest-exported symbol (resolved by getServerFnById)\n      // carries `method`, enabling the server handler to reject\n      // mismatched HTTP methods before parsing request payloads.\n      ;(extractedFn as any).method = resolvedOptions.method\n\n      return Object.assign(\n        async (opts?: CompiledFetcherFnOptions) => {\n          // Start by executing the client-side middleware chain\n          const result = await executeMiddleware(resolvedMiddleware, 'client', {\n            ...extractedFn,\n            ...newOptions,\n            data: opts?.data as any,\n            headers: opts?.headers,\n            signal: opts?.signal,\n            fetch: opts?.fetch,\n            context: createNullProtoObject(),\n          })\n\n          const redirect = parseRedirect(result.error)\n          if (redirect) {\n            throw redirect\n          }\n\n          if (result.error) throw result.error\n          return result.result\n        },\n        {\n          // This copies over the URL, function ID\n          ...extractedFn,\n          // Expose the declared HTTP method so the server handler\n          // can reject mismatched methods before parsing payloads\n          method: resolvedOptions.method,\n          // The extracted function on the server-side calls\n          // this function\n          __executeServer: async (opts: any) => {\n            const startContext = getStartContextServerOnly()\n            const serverContextAfterGlobalMiddlewares =\n              startContext.contextAfterGlobalMiddlewares\n            // Use safeObjectMerge for opts.context which comes from client\n            const ctx = {\n              ...extractedFn,\n              ...opts,\n              // Ensure we use the full serverFnMeta from the provider file's extractedFn\n              // (which has id, name, filename) rather than the partial one from SSR/client\n              // callers (which only has id)\n              serverFnMeta: extractedFn.serverFnMeta,\n              // Use safeObjectMerge for opts.context which comes from client\n              context: safeObjectMerge(\n                serverContextAfterGlobalMiddlewares,\n                opts.context,\n              ),\n              request: startContext.request,\n            }\n\n            const result = await executeMiddleware(\n              resolvedMiddleware,\n              'server',\n              ctx,\n            ).then((d) => ({\n              // Only send the result and sendContext back to the client\n              result: d.result,\n              error: d.error,\n              context: d.sendContext,\n            }))\n\n            return result\n          },\n        },\n      ) as any\n    },\n  } as ServerFnBuilder<Register, Method>\n  const fun = (options?: { method?: Method }) => {\n    const newOptions = {\n      ...resolvedOptions,\n      ...options,\n    }\n    return createServerFn(undefined, newOptions) as any\n  }\n  return Object.assign(fun, res) as any\n}\n\nexport async function executeMiddleware(\n  middlewares: Array<AnyFunctionMiddleware | AnyRequestMiddleware>,\n  env: 'client' | 'server',\n  opts: ServerFnMiddlewareOptions,\n): Promise<ServerFnMiddlewareResult> {\n  const globalMiddlewares = getStartOptions()?.functionMiddleware || []\n  let flattenedMiddlewares = flattenMiddlewares([\n    ...globalMiddlewares,\n    ...middlewares,\n  ])\n\n  // On server, filter out middlewares that already executed in the request phase\n  // to prevent duplicate execution (issue #5239)\n  if (env === 'server') {\n    const startContext = getStartContextServerOnly({ throwIfNotFound: false })\n    if (startContext?.executedRequestMiddlewares) {\n      flattenedMiddlewares = flattenedMiddlewares.filter(\n        (m) => !startContext.executedRequestMiddlewares.has(m),\n      )\n    }\n  }\n\n  const callNextMiddleware: NextFn = async (ctx) => {\n    // Get the next middleware\n    const nextMiddleware = flattenedMiddlewares.shift()\n\n    // If there are no more middlewares, return the context\n    if (!nextMiddleware) {\n      return ctx\n    }\n\n    // Execute the middleware\n    try {\n      if (\n        'inputValidator' in nextMiddleware.options &&\n        nextMiddleware.options.inputValidator &&\n        env === 'server'\n      ) {\n        // Execute the middleware's input function\n        ctx.data = await execValidator(\n          nextMiddleware.options.inputValidator,\n          ctx.data,\n        )\n      }\n\n      let middlewareFn: MiddlewareFn | undefined = undefined\n      if (env === 'client') {\n        if ('client' in nextMiddleware.options) {\n          middlewareFn = nextMiddleware.options.client as\n            | MiddlewareFn\n            | undefined\n        }\n      }\n      // env === 'server'\n      else if ('server' in nextMiddleware.options) {\n        middlewareFn = nextMiddleware.options.server as MiddlewareFn | undefined\n      }\n\n      if (middlewareFn) {\n        const userNext = async (\n          userCtx: ServerFnMiddlewareResult | undefined = {} as any,\n        ) => {\n          // Return the next middleware\n          // Use safeObjectMerge for context objects to prevent prototype pollution\n          const nextCtx = {\n            ...ctx,\n            ...userCtx,\n            context: safeObjectMerge(ctx.context, userCtx.context),\n            sendContext: safeObjectMerge(ctx.sendContext, userCtx.sendContext),\n            headers: mergeHeaders(ctx.headers, userCtx.headers),\n            _callSiteFetch: ctx._callSiteFetch,\n            fetch: ctx._callSiteFetch ?? userCtx.fetch ?? ctx.fetch,\n            result:\n              userCtx.result !== undefined\n                ? userCtx.result\n                : userCtx instanceof Response\n                  ? userCtx\n                  : (ctx as any).result,\n            error: userCtx.error ?? (ctx as any).error,\n          }\n\n          const result = await callNextMiddleware(nextCtx)\n\n          if (result.error) {\n            throw result.error\n          }\n\n          return result\n        }\n\n        // Execute the middleware\n        const result = await middlewareFn({\n          ...ctx,\n          next: userNext,\n        })\n\n        // If result is NOT a ctx object, we need to return it as\n        // the { result }\n        if (isRedirect(result)) {\n          return {\n            ...ctx,\n            error: result,\n          }\n        }\n\n        if (result instanceof Response) {\n          return {\n            ...ctx,\n            result,\n          }\n        }\n\n        if (!(result as any)) {\n          throw new Error(\n            'User middleware returned undefined. You must call next() or return a result in your middlewares.',\n          )\n        }\n\n        return result\n      }\n\n      return callNextMiddleware(ctx)\n    } catch (error: any) {\n      return {\n        ...ctx,\n        error,\n      }\n    }\n  }\n\n  // Start the middleware chain\n  return callNextMiddleware({\n    ...opts,\n    headers: opts.headers || {},\n    sendContext: opts.sendContext || {},\n    context: opts.context || createNullProtoObject(),\n    _callSiteFetch: opts.fetch,\n  })\n}\n\nexport type CompiledFetcherFnOptions = {\n  method: Method\n  data: unknown\n  headers?: HeadersInit\n  signal?: AbortSignal\n  fetch?: CustomFetch\n  context?: any\n}\n\nexport type Fetcher<TMiddlewares, TInputValidator, TResponse> =\n  undefined extends IntersectAllValidatorInputs<TMiddlewares, TInputValidator>\n    ? OptionalFetcher<TMiddlewares, TInputValidator, TResponse>\n    : RequiredFetcher<TMiddlewares, TInputValidator, TResponse>\n\nexport interface FetcherBase {\n  [TSS_SERVER_FUNCTION]: true\n  url: string\n  method: Method\n  __executeServer: (opts: {\n    method: Method\n    data: unknown\n    headers?: HeadersInit\n    context?: any\n  }) => Promise<unknown>\n}\n\nexport interface OptionalFetcher<\n  TMiddlewares,\n  TInputValidator,\n  TResponse,\n> extends FetcherBase {\n  (\n    options?: OptionalFetcherDataOptions<TMiddlewares, TInputValidator>,\n  ): Promise<Awaited<TResponse>>\n}\n\nexport interface RequiredFetcher<\n  TMiddlewares,\n  TInputValidator,\n  TResponse,\n> extends FetcherBase {\n  (\n    opts: RequiredFetcherDataOptions<TMiddlewares, TInputValidator>,\n  ): Promise<Awaited<TResponse>>\n}\n\nexport type CustomFetch = typeof globalThis.fetch\n\nexport type FetcherBaseOptions = {\n  headers?: HeadersInit\n  signal?: AbortSignal\n  fetch?: CustomFetch\n}\n\nexport interface OptionalFetcherDataOptions<\n  TMiddlewares,\n  TInputValidator,\n> extends FetcherBaseOptions {\n  data?: Expand<IntersectAllValidatorInputs<TMiddlewares, TInputValidator>>\n}\n\nexport interface RequiredFetcherDataOptions<\n  TMiddlewares,\n  TInputValidator,\n> extends FetcherBaseOptions {\n  data: Expand<IntersectAllValidatorInputs<TMiddlewares, TInputValidator>>\n}\n\nexport type RscStream<T> = {\n  __cacheState: T\n}\n\nexport type Method = 'GET' | 'POST'\n\nexport type ServerFnReturnType<TRegister, TResponse> =\n  TResponse extends PromiseLike<infer U>\n    ? Promise<ServerFnReturnType<TRegister, U>>\n    : TResponse extends Response\n      ? TResponse\n      : ValidateSerializableInput<TRegister, TResponse>\n\nexport type ServerFn<\n  TRegister,\n  TMethod,\n  TMiddlewares,\n  TInputValidator,\n  TResponse,\n> = (\n  ctx: ServerFnCtx<TRegister, TMethod, TMiddlewares, TInputValidator>,\n) => ServerFnReturnType<TRegister, TResponse>\n\nexport interface ServerFnCtx<\n  TRegister,\n  TMethod,\n  TMiddlewares,\n  TInputValidator,\n> {\n  data: Expand<IntersectAllValidatorOutputs<TMiddlewares, TInputValidator>>\n  serverFnMeta: ServerFnMeta\n  context: Expand<AssignAllServerFnContext<TRegister, TMiddlewares, {}>>\n  method: TMethod\n}\n\nexport type CompiledFetcherFn<TRegister, TResponse> = {\n  (\n    opts: CompiledFetcherFnOptions & ServerFnBaseOptions<TRegister, Method>,\n  ): Promise<TResponse>\n  url: string\n  serverFnMeta: ServerFnMeta\n}\n\nexport type ServerFnBaseOptions<\n  TRegister,\n  TMethod extends Method = 'GET',\n  TResponse = unknown,\n  TMiddlewares = unknown,\n  TInputValidator = unknown,\n> = {\n  method: TMethod\n  middleware?: Constrain<\n    TMiddlewares,\n    ReadonlyArray<AnyFunctionMiddleware | AnyRequestMiddleware>\n  >\n  inputValidator?: ConstrainValidator<TRegister, TMethod, TInputValidator>\n  extractedFn?: CompiledFetcherFn<TRegister, TResponse>\n  serverFn?: ServerFn<\n    TRegister,\n    TMethod,\n    TMiddlewares,\n    TInputValidator,\n    TResponse\n  >\n}\n\nexport type ValidateValidatorInput<\n  TRegister,\n  TMethod extends Method,\n  TInputValidator,\n> = TMethod extends 'POST'\n  ? ResolveValidatorInput<TInputValidator> extends FormData\n    ? ResolveValidatorInput<TInputValidator>\n    : ValidateSerializable<\n        ResolveValidatorInput<TInputValidator>,\n        RegisteredSerializableInput<TRegister>\n      >\n  : ValidateSerializable<\n      ResolveValidatorInput<TInputValidator>,\n      RegisteredSerializableInput<TRegister>\n    >\n\nexport type ValidateValidator<\n  TRegister,\n  TMethod extends Method,\n  TInputValidator,\n> =\n  ValidateValidatorInput<\n    TRegister,\n    TMethod,\n    TInputValidator\n  > extends infer TInput\n    ? Validator<TInput, any>\n    : never\n\nexport type ConstrainValidator<\n  TRegister,\n  TMethod extends Method,\n  TInputValidator,\n> =\n  | (unknown extends TInputValidator\n      ? TInputValidator\n      : ResolveValidatorInput<TInputValidator> extends ValidateValidator<\n            TRegister,\n            TMethod,\n            TInputValidator\n          >\n        ? TInputValidator\n        : never)\n  | ValidateValidator<TRegister, TMethod, TInputValidator>\n\nexport type AppendMiddlewares<TMiddlewares, TNewMiddlewares> =\n  TMiddlewares extends ReadonlyArray<any>\n    ? TNewMiddlewares extends ReadonlyArray<any>\n      ? readonly [...TMiddlewares, ...TNewMiddlewares]\n      : TMiddlewares\n    : TNewMiddlewares\n\nexport interface ServerFnMiddleware<\n  TRegister,\n  TMethod extends Method,\n  TMiddlewares,\n  TInputValidator,\n> {\n  middleware: <const TNewMiddlewares>(\n    middlewares: Constrain<\n      TNewMiddlewares,\n      ReadonlyArray<AnyFunctionMiddleware | AnyRequestMiddleware | AnyServerFn>\n    >,\n  ) => ServerFnAfterMiddleware<\n    TRegister,\n    TMethod,\n    AppendMiddlewares<TMiddlewares, TNewMiddlewares>,\n    TInputValidator\n  >\n}\n\nexport interface ServerFnAfterMiddleware<\n  TRegister,\n  TMethod extends Method,\n  TMiddlewares,\n  TInputValidator,\n>\n  extends\n    ServerFnWithTypes<\n      TRegister,\n      TMethod,\n      TMiddlewares,\n      TInputValidator,\n      undefined\n    >,\n    ServerFnMiddleware<TRegister, TMethod, TMiddlewares, undefined>,\n    ServerFnValidator<TRegister, TMethod, TMiddlewares>,\n    ServerFnHandler<TRegister, TMethod, TMiddlewares, TInputValidator> {\n  <TNewMethod extends Method = TMethod>(options?: {\n    method?: TNewMethod\n  }): ServerFnAfterMiddleware<\n    TRegister,\n    TNewMethod,\n    TMiddlewares,\n    TInputValidator\n  >\n}\n\nexport type ValidatorFn<TRegister, TMethod extends Method, TMiddlewares> = <\n  TInputValidator,\n>(\n  inputValidator: ConstrainValidator<TRegister, TMethod, TInputValidator>,\n) => ServerFnAfterValidator<TRegister, TMethod, TMiddlewares, TInputValidator>\n\nexport interface ServerFnValidator<\n  TRegister,\n  TMethod extends Method,\n  TMiddlewares,\n> {\n  inputValidator: ValidatorFn<TRegister, TMethod, TMiddlewares>\n}\n\nexport interface ServerFnAfterValidator<\n  TRegister,\n  TMethod extends Method,\n  TMiddlewares,\n  TInputValidator,\n>\n  extends\n    ServerFnWithTypes<\n      TRegister,\n      TMethod,\n      TMiddlewares,\n      TInputValidator,\n      undefined\n    >,\n    ServerFnMiddleware<TRegister, TMethod, TMiddlewares, TInputValidator>,\n    ServerFnHandler<TRegister, TMethod, TMiddlewares, TInputValidator> {}\n\nexport interface ServerFnAfterTyper<\n  TRegister,\n  TMethod extends Method,\n  TMiddlewares,\n  TInputValidator,\n>\n  extends\n    ServerFnWithTypes<\n      TRegister,\n      TMethod,\n      TMiddlewares,\n      TInputValidator,\n      undefined\n    >,\n    ServerFnHandler<TRegister, TMethod, TMiddlewares, TInputValidator> {}\n\n// Handler\nexport interface ServerFnHandler<\n  TRegister,\n  TMethod extends Method,\n  TMiddlewares,\n  TInputValidator,\n> {\n  handler: <TNewResponse>(\n    fn?: ServerFn<\n      TRegister,\n      TMethod,\n      TMiddlewares,\n      TInputValidator,\n      TNewResponse\n    >,\n  ) => Fetcher<TMiddlewares, TInputValidator, TNewResponse>\n}\n\nexport interface ServerFnBuilder<TRegister, TMethod extends Method = 'GET'>\n  extends\n    ServerFnWithTypes<TRegister, TMethod, undefined, undefined, undefined>,\n    ServerFnMiddleware<TRegister, TMethod, undefined, undefined>,\n    ServerFnValidator<TRegister, TMethod, undefined>,\n    ServerFnHandler<TRegister, TMethod, undefined, undefined> {\n  options: ServerFnBaseOptions<\n    TRegister,\n    TMethod,\n    unknown,\n    u…3531 tokens truncated…   TMiddlewares,\n      undefined,\n      undefined,\n      undefined\n    >,\n    FunctionMiddlewareClient<TRegister, TMiddlewares, undefined>,\n    FunctionMiddlewareValidator<TRegister, TMiddlewares> {}\n\nexport interface FunctionMiddlewareWithTypes<\n  TRegister,\n  TMiddlewares,\n  TInputValidator,\n  TServerContext,\n  TServerSendContext,\n  TClientContext,\n  TClientSendContext,\n> {\n  '~types': FunctionMiddlewareTypes<\n    TRegister,\n    TMiddlewares,\n    TInputValidator,\n    TServerContext,\n    TServerSendContext,\n    TClientContext,\n    TClientSendContext\n  >\n  options: FunctionMiddlewareOptions<\n    TRegister,\n    TMiddlewares,\n    TInputValidator,\n    TServerContext,\n    TClientContext\n  >\n}\n\nexport interface FunctionMiddlewareTypes<\n  in out TRegister,\n  in out TMiddlewares,\n  in out TInputValidator,\n  in out TServerContext,\n  in out TServerSendContext,\n  in out TClientContext,\n  in out TClientSendContext,\n> {\n  type: 'function'\n  middlewares: TMiddlewares\n  input: ResolveValidatorInput<TInputValidator>\n  allInput: IntersectAllValidatorInputs<TMiddlewares, TInputValidator>\n  output: ResolveValidatorOutput<TInputValidator>\n  allOutput: IntersectAllValidatorOutputs<TMiddlewares, TInputValidator>\n  clientContext: TClientContext\n  allClientContextBeforeNext: AssignAllClientContextBeforeNext<\n    TMiddlewares,\n    TClientContext\n  >\n  allClientContextAfterNext: AssignAllClientContextAfterNext<\n    TMiddlewares,\n    TClientContext,\n    TClientSendContext\n  >\n  serverContext: TServerContext\n  serverSendContext: TServerSendContext\n  allServerSendContext: AssignAllServerSendContext<\n    TMiddlewares,\n    TServerSendContext\n  >\n  allServerContext: AssignAllServerFnContext<\n    TRegister,\n    TMiddlewares,\n    TServerSendContext,\n    TServerContext\n  >\n  clientSendContext: TClientSendContext\n  allClientSendContext: AssignAllClientSendContext<\n    TMiddlewares,\n    TClientSendContext\n  >\n  inputValidator: TInputValidator\n}\n\n/**\n * Recursively resolve the input type produced by a sequence of middleware\n */\nexport type IntersectAllValidatorInputs<TMiddlewares, TInputValidator> =\n  unknown extends TInputValidator\n    ? TInputValidator\n    : TInputValidator extends undefined\n      ? IntersectAllMiddleware<TMiddlewares, 'allInput'>\n      : IntersectAssign<\n          IntersectAllMiddleware<TMiddlewares, 'allInput'>,\n          ResolveValidatorInput<TInputValidator>\n        >\n\nexport type IntersectAllMiddleware<\n  TMiddlewares,\n  TType extends\n    | keyof AnyFunctionMiddleware['~types']\n    | keyof AnyRequestMiddleware['~types']\n    | keyof AnyServerFn['~types'],\n  TAcc = undefined,\n> = TMiddlewares extends readonly [infer TMiddleware, ...infer TRest]\n  ? TMiddleware extends\n      | AnyFunctionMiddleware\n      | AnyRequestMiddleware\n      | AnyServerFn\n    ? IntersectAllMiddleware<\n        TRest,\n        TType,\n        IntersectAssign<\n          TAcc,\n          TMiddleware['~types'][TType & keyof TMiddleware['~types']]\n        >\n      >\n    : TAcc\n  : TAcc\n\nexport type AnyFunctionMiddleware = FunctionMiddlewareWithTypes<\n  any,\n  any,\n  any,\n  any,\n  any,\n  any,\n  any\n>\n\n/**\n * Recursively merge the output type produced by a sequence of middleware\n */\nexport type IntersectAllValidatorOutputs<TMiddlewares, TInputValidator> =\n  unknown extends TInputValidator\n    ? TInputValidator\n    : TInputValidator extends undefined\n      ? IntersectAllMiddleware<TMiddlewares, 'allOutput'>\n      : IntersectAssign<\n          IntersectAllMiddleware<TMiddlewares, 'allOutput'>,\n          Awaited<ResolveValidatorOutput<TInputValidator>>\n        >\n\n/**\n * Recursively resolve the client context type produced by a sequence of middleware\n */\nexport type AssignAllClientContextBeforeNext<\n  TMiddlewares,\n  TClientContext = undefined,\n> = unknown extends TClientContext\n  ? TClientContext\n  : Assign<\n      AssignAllMiddleware<TMiddlewares, 'allClientContextBeforeNext'>,\n      TClientContext\n    >\n\nexport type AssignAllMiddleware<\n  TMiddlewares,\n  TType extends\n    | keyof AnyFunctionMiddleware['~types']\n    | keyof AnyRequestMiddleware['~types']\n    | keyof AnyServerFn['~types'],\n  TAcc = undefined,\n> = TMiddlewares extends readonly [infer TMiddleware, ...infer TRest]\n  ? TMiddleware extends\n      | AnyFunctionMiddleware\n      | AnyRequestMiddleware\n      | AnyServerFn\n    ? AssignAllMiddleware<\n        TRest,\n        TType,\n        Assign<TAcc, TMiddleware['~types'][TType & keyof TMiddleware['~types']]>\n      >\n    : TAcc\n  : TAcc\n\nexport type AssignAllClientContextAfterNext<\n  TMiddlewares,\n  TClientContext = undefined,\n  TSendContext = undefined,\n> = unknown extends TClientContext\n  ? Assign<TClientContext, TSendContext>\n  : Assign<\n      AssignAllMiddleware<TMiddlewares, 'allClientContextAfterNext'>,\n      Assign<TClientContext, TSendContext>\n    >\n\nexport type AssignAllServerSendContext<\n  TMiddlewares,\n  TSendContext = undefined,\n> = unknown extends TSendContext\n  ? TSendContext\n  : Assign<\n      AssignAllMiddleware<TMiddlewares, 'allServerSendContext'>,\n      TSendContext\n    >\n\nexport type AssignAllServerRequestContext<\n  TRegister,\n  TMiddlewares,\n  TSendContext = undefined,\n  TServerContext = undefined,\n> = Assign<\n  // Fetch Request Context\n  GlobalFetchRequestContext,\n  Assign<\n    GlobalServerRequestContext<TRegister>,\n    __AssignAllServerRequestContext<TMiddlewares, TSendContext, TServerContext>\n  >\n>\n\n// export type GlobalFetchRequestContext<TRegister> = AnyContext\nexport type GlobalFetchRequestContext = Register extends {\n  server: { requestContext: infer TRequestContext }\n}\n  ? TRequestContext\n  : AnyContext\n\nexport type GlobalServerRequestContext<TRegister> = TRegister extends {\n  config: StartInstanceOptions<any, any, infer TRequestMiddlewares, any>\n}\n  ? AssignAllMiddleware<TRequestMiddlewares, 'allServerContext'>\n  : AnyContext\n\ntype __AssignAllServerRequestContext<\n  TMiddlewares,\n  TSendContext = undefined,\n  TServerContext = undefined,\n> = unknown extends TSendContext\n  ? Assign<TSendContext, TServerContext>\n  : Assign<\n      AssignAllMiddleware<TMiddlewares, 'allServerContext'>,\n      Assign<TSendContext, TServerContext>\n    >\n\nexport type AssignAllServerFnContext<\n  TRegister,\n  TMiddlewares,\n  TSendContext = undefined,\n  TServerContext = undefined,\n> = Assign<\n  GlobalFetchRequestContext,\n  Assign<\n    GlobalServerRequestContext<TRegister>, // TODO: This enabled global middleware\n    // type inference, but creates a circular types issue. No idea how to fix this.\n    // AnyContext,\n    Assign<\n      GlobalServerFnContext<TRegister>, // TODO: This enabled global middleware\n      // type inference, but creates a circular types issue. No idea how to fix this.\n      // AnyContext,/\n      __AssignAllServerFnContext<TMiddlewares, TSendContext, TServerContext>\n    >\n  >\n>\n\ntype GlobalServerFnContext<TRegister> = TRegister extends {\n  config: StartInstanceOptions<any, any, any, infer TFunctionMiddlewares>\n}\n  ? AssignAllMiddleware<TFunctionMiddlewares, 'allServerContext'>\n  : AnyContext\n\ntype __AssignAllServerFnContext<\n  TMiddlewares,\n  TSendContext = undefined,\n  TServerContext = undefined,\n> = unknown extends TSendContext\n  ? Assign<TSendContext, TServerContext>\n  : Assign<\n      AssignAllMiddleware<TMiddlewares, 'allServerContext'>,\n      Assign<TSendContext, TServerContext>\n    >\n\nexport type AssignAllClientSendContext<\n  TMiddlewares,\n  TSendContext = undefined,\n> = unknown extends TSendContext\n  ? TSendContext\n  : Assign<\n      AssignAllMiddleware<TMiddlewares, 'allClientSendContext'>,\n      TSendContext\n    >\n\nexport interface FunctionMiddlewareOptions<\n  in out TRegister,\n  in out TMiddlewares,\n  in out TInputValidator,\n  in out TServerContext,\n  in out TClientContext,\n> {\n  middleware?: TMiddlewares\n  inputValidator?: ConstrainValidator<TRegister, 'GET', TInputValidator>\n  client?: FunctionMiddlewareClientFn<\n    TRegister,\n    TMiddlewares,\n    TInputValidator,\n    TServerContext,\n    TClientContext\n  >\n  server?: FunctionMiddlewareServerFn<\n    TRegister,\n    TMiddlewares,\n    TInputValidator,\n    TServerContext,\n    unknown,\n    unknown\n  >\n}\n\nexport type FunctionMiddlewareClientNextFn<TRegister, TMiddlewares> = <\n  TSendContext = undefined,\n  TNewClientContext = undefined,\n>(ctx?: {\n  context?: TNewClientContext\n  sendContext?: ValidateSerializableInput<TRegister, TSendContext>\n  headers?: HeadersInit\n  fetch?: CustomFetch\n}) => Promise<\n  FunctionClientResultWithContext<TMiddlewares, TSendContext, TNewClientContext>\n>\n\nexport interface FunctionMiddlewareServer<\n  TRegister,\n  TMiddlewares,\n  TInputValidator,\n  TServerSendContext,\n  TClientContext,\n> {\n  server: <TNewServerContext = undefined, TSendContext = undefined>(\n    server: FunctionMiddlewareServerFn<\n      TRegister,\n      TMiddlewares,\n      TInputValidator,\n      TServerSendContext,\n      TNewServerContext,\n      TSendContext\n    >,\n  ) => FunctionMiddlewareAfterServer<\n    TRegister,\n    TMiddlewares,\n    TInputValidator,\n    TNewServerContext,\n    TServerSendContext,\n    TClientContext,\n    TSendContext\n  >\n}\n\nexport type FunctionMiddlewareServerFn<\n  TRegister,\n  TMiddlewares,\n  TInputValidator,\n  TServerSendContext,\n  TNewServerContext,\n  TSendContext,\n> = (\n  options: FunctionMiddlewareServerFnOptions<\n    TRegister,\n    TMiddlewares,\n    TInputValidator,\n    TServerSendContext\n  >,\n) => FunctionMiddlewareServerFnResult<\n  TRegister,\n  TMiddlewares,\n  TServerSendContext,\n  TNewServerContext,\n  TSendContext\n>\n\nexport type FunctionMiddlewareServerNextFn<\n  TRegister,\n  TMiddlewares,\n  TServerSendContext,\n> = <TNewServerContext = undefined, TSendContext = undefined>(ctx?: {\n  context?: TNewServerContext\n  sendContext?: ValidateSerializableInput<TRegister, TSendContext>\n}) => Promise<\n  FunctionServerResultWithContext<\n    TRegister,\n    TMiddlewares,\n    TServerSendContext,\n    TNewServerContext,\n    TSendContext\n  >\n>\n\nexport type FunctionServerResultWithContext<\n  in out TRegister,\n  in out TMiddlewares,\n  in out TServerSendContext,\n  in out TServerContext,\n  in out TSendContext,\n> = {\n  'use functions must return the result of next()': true\n  '~types': {\n    context: TServerContext\n    sendContext: TSendContext\n  }\n  context: Expand<\n    AssignAllServerFnContext<\n      TRegister,\n      TMiddlewares,\n      TServerSendContext,\n      TServerContext\n    >\n  >\n  sendContext: Expand<AssignAllClientSendContext<TMiddlewares, TSendContext>>\n}\n\nexport interface FunctionMiddlewareServerFnOptions<\n  in out TRegister,\n  in out TMiddlewares,\n  in out TInputValidator,\n  in out TServerSendContext,\n> {\n  data: Expand<IntersectAllValidatorOutputs<TMiddlewares, TInputValidator>>\n  context: Expand<\n    AssignAllServerFnContext<TRegister, TMiddlewares, TServerSendContext>\n  >\n  next: FunctionMiddlewareServerNextFn<\n    TRegister,\n    TMiddlewares,\n    TServerSendContext\n  >\n  method: Method\n  serverFnMeta: ServerFnMeta\n  signal: AbortSignal\n}\n\nexport type FunctionMiddlewareServerFnResult<\n  TRegister,\n  TMiddlewares,\n  TServerSendContext,\n  TServerContext,\n  TSendContext,\n> =\n  | Promise<\n      FunctionServerResultWithContext<\n        TRegister,\n        TMiddlewares,\n        TServerSendContext,\n        TServerContext,\n        TSendContext\n      >\n    >\n  | FunctionServerResultWithContext<\n      TRegister,\n      TMiddlewares,\n      TServerSendContext,\n      TServerContext,\n      TSendContext\n    >\n\nexport interface FunctionMiddlewareAfterServer<\n  TRegister,\n  TMiddlewares,\n  TInputValidator,\n  TServerContext,\n  TServerSendContext,\n  TClientContext,\n  TClientSendContext,\n> extends FunctionMiddlewareWithTypes<\n  TRegister,\n  TMiddlewares,\n  TInputValidator,\n  TServerContext,\n  TServerSendContext,\n  TClientContext,\n  TClientSendContext\n> {}\n\nexport interface FunctionMiddlewareClient<\n  TRegister,\n  TMiddlewares,\n  TInputValidator,\n> {\n  client: <TSendServerContext = undefined, TNewClientContext = undefined>(\n    client: FunctionMiddlewareClientFn<\n      TRegister,\n      TMiddlewares,\n      TInputValidator,\n      TSendServerContext,\n      TNewClientContext\n    >,\n  ) => FunctionMiddlewareAfterClient<\n    TRegister,\n    TMiddlewares,\n    TInputValidator,\n    TSendServerContext,\n    TNewClientContext\n  >\n}\n\nexport type FunctionMiddlewareClientFn<\n  TRegister,\n  TMiddlewares,\n  TInputValidator,\n  TSendContext,\n  TClientContext,\n> = (\n  options: FunctionMiddlewareClientFnOptions<\n    TRegister,\n    TMiddlewares,\n    TInputValidator\n  >,\n) => FunctionMiddlewareClientFnResult<\n  TMiddlewares,\n  TSendContext,\n  TClientContext\n>\n\nexport interface FunctionMiddlewareClientFnOptions<\n  in out TRegister,\n  in out TMiddlewares,\n  in out TInputValidator,\n> {\n  data: Expand<IntersectAllValidatorInputs<TMiddlewares, TInputValidator>>\n  context: Expand<AssignAllClientContextBeforeNext<TMiddlewares>>\n  sendContext: Expand<AssignAllServerSendContext<TMiddlewares>>\n  method: Method\n  signal: AbortSignal\n  serverFnMeta: ClientFnMeta\n  next: FunctionMiddlewareClientNextFn<TRegister, TMiddlewares>\n  filename: string\n  fetch?: CustomFetch\n}\n\nexport type FunctionMiddlewareClientFnResult<\n  TMiddlewares,\n  TSendContext,\n  TClientContext,\n> =\n  | Promise<\n      FunctionClientResultWithContext<\n        TMiddlewares,\n        TSendContext,\n        TClientContext\n      >\n    >\n  | FunctionClientResultWithContext<TMiddlewares, TSendContext, TClientContext>\n\nexport type FunctionClientResultWithContext<\n  in out TMiddlewares,\n  in out TSendContext,\n  in out TClientContext,\n> = {\n  'use functions must return the result of next()': true\n  context: Expand<AssignAllClientContextAfterNext<TMiddlewares, TClientContext>>\n  sendContext: Expand<AssignAllServerSendContext<TMiddlewares, TSendContext>>\n  headers: HeadersInit\n  fetch?: CustomFetch\n}\n\nexport interface FunctionMiddlewareAfterClient<\n  TRegister,\n  TMiddlewares,\n  TInputValidator,\n  TServerSendContext,\n  TClientContext,\n>\n  extends\n    FunctionMiddlewareWithTypes<\n      TRegister,\n      TMiddlewares,\n      TInputValidator,\n      undefined,\n      TServerSendContext,\n      TClientContext,\n      undefined\n    >,\n    FunctionMiddlewareServer<\n      TRegister,\n      TMiddlewares,\n      TInputValidator,\n      TServerSendContext,\n      TClientContext\n    > {}\n\nexport interface FunctionMiddlewareValidator<TRegister, TMiddlewares> {\n  inputValidator: <TNewValidator>(\n    inputValidator: ConstrainValidator<TRegister, 'GET', TNewValidator>,\n  ) => FunctionMiddlewareAfterValidator<TRegister, TMiddlewares, TNewValidator>\n}\n\nexport interface FunctionMiddlewareAfterValidator<\n  TRegister,\n  TMiddlewares,\n  TInputValidator,\n>\n  extends\n    FunctionMiddlewareWithTypes<\n      TRegister,\n      TMiddlewares,\n      TInputValidator,\n      undefined,\n      undefined,\n      undefined,\n      undefined\n    >,\n    FunctionMiddlewareServer<\n      TRegister,\n      TMiddlewares,\n      TInputValidator,\n      undefined,\n      undefined\n    >,\n    FunctionMiddlewareClient<TRegister, TMiddlewares, TInputValidator> {}\n\nexport interface RequestMiddleware<\n  TRegister,\n> extends RequestMiddlewareAfterMiddleware<TRegister, undefined> {\n  middleware: <const TMiddlewares = undefined>(\n    middlewares: Constrain<TMiddlewares, ReadonlyArray<AnyRequestMiddleware>>,\n  ) => RequestMiddlewareAfterMiddleware<TRegister, TMiddlewares>\n}\n\nexport type AnyRequestMiddleware = RequestMiddlewareWithTypes<any, any, any>\n\nexport interface RequestMiddlewareWithTypes<\n  TRegister,\n  TMiddlewares,\n  TServerContext,\n> {\n  '~types': RequestMiddlewareTypes<TRegister, TMiddlewares, TServerContext>\n  options: RequestMiddlewareOptions<TRegister, TMiddlewares, TServerContext>\n}\n\nexport interface RequestMiddlewareOptions<\n  in out TRegister,\n  in out TMiddlewares,\n  in out TServerContext,\n> {\n  middleware?: TMiddlewares\n  server?: RequestServerFn<TRegister, TMiddlewares, TServerContext>\n}\nexport interface RequestMiddlewareTypes<\n  TRegister,\n  TMiddlewares,\n  TServerContext,\n> {\n  type: 'request'\n  // this only exists so we can use request middlewares in server functions\n  allInput: undefined\n  // this only exists so we can use request middlewares in server functions\n  allOutput: undefined\n  middlewares: TMiddlewares\n  serverContext: TServerContext\n  allServerContext: AssignAllServerRequestContext<\n    TRegister,\n    TMiddlewares,\n    undefined,\n    TServerContext\n  >\n}\n\nexport interface RequestMiddlewareAfterMiddleware<TRegister, TMiddlewares>\n  extends\n    RequestMiddlewareWithTypes<TRegister, TMiddlewares, undefined>,\n    RequestMiddlewareServer<TRegister, TMiddlewares> {}\n\nexport interface RequestMiddlewareServer<TRegister, TMiddlewares> {\n  server: <TServerContext = undefined>(\n    fn: RequestServerFn<TRegister, TMiddlewares, TServerContext>,\n  ) => RequestMiddlewareAfterServer<TRegister, TMiddlewares, TServerContext>\n}\n\nexport type RequestServerFn<TRegister, TMiddlewares, TServerContext> = (\n  options: RequestServerOptions<TRegister, TMiddlewares>,\n) => RequestMiddlewareServerFnResult<TRegister, TMiddlewares, TServerContext>\n\nexport interface RequestServerOptions<TRegister, TMiddlewares> {\n  request: Request\n  pathname: string\n  context: Expand<AssignAllServerRequestContext<TRegister, TMiddlewares>>\n  next: RequestServerNextFn<TRegister, TMiddlewares>\n  /**\n   * Metadata about the server function being invoked.\n   * This is only present when the request is handling a server function call.\n   * For regular page requests, this will be undefined.\n   */\n  serverFnMeta?: ServerFnMeta\n}\n\nexport type RequestServerNextFn<TRegister, TMiddlewares> = <\n  TServerContext = undefined,\n>(\n  options?: RequestServerNextFnOptions<TServerContext>,\n) => RequestServerNextFnResult<TRegister, TMiddlewares, TServerContext>\n\nexport interface RequestServerNextFnOptions<TServerContext> {\n  context?: TServerContext\n}\n\nexport type RequestServerNextFnResult<TRegister, TMiddlewares, TServerContext> =\n  | Promise<RequestServerResult<TRegister, TMiddlewares, TServerContext>>\n  | RequestServerResult<TRegister, TMiddlewares, TServerContext>\n\nexport type RequestMiddlewareServerFnResult<\n  TRegister,\n  TMiddlewares,\n  TServerContext,\n> =\n  | Promise<\n      RequestServerResult<TRegister, TMiddlewares, TServerContext> | Response\n    >\n  | RequestServerResult<TRegister, TMiddlewares, TServerContext>\n  | Response\n\nexport interface RequestServerResult<TRegister, TMiddlewares, TServerContext> {\n  request: Request\n  pathname: string\n  context: Expand<\n    AssignAllServerRequestContext<\n      TRegister,\n      TMiddlewares,\n      undefined,\n      TServerContext\n    >\n  >\n  response: Response\n}\n\nexport interface RequestMiddlewareAfterServer<\n  TRegister,\n  TMiddlewares,\n  TServerContext,\n> extends RequestMiddlewareWithTypes<TRegister, TMiddlewares, TServerContext> {}\n"],"names":[],"mappings":"AAiCO,MAAM,mBAA2C,CAAC,SAAS,WAAW;AAC3E,QAAM,kBAAkB;AAAA,IACtB,MAAM;AAAA,IACN,GAAI,UAAU;AAAA,EAAA;AAGhB,SAAO;AAAA,IACL,SAAS;AAAA,IACT,YAAY,CAAC,eAAoB;AAC/B,aAAO;AAAA,QACL,CAAA;AAAA,QACA,OAAO,OAAO,iBAAiB,EAAE,YAAY;AAAA,MAAA;AAAA,IAEjD;AAAA,IACA,gBAAgB,CAAC,mBAAwB;AACvC,aAAO;AAAA,QACL,CAAA;AAAA,QACA,OAAO,OAAO,iBAAiB,EAAE,gBAAgB;AAAA,MAAA;AAAA,IAErD;AAAA,IACA,QAAQ,CAAC,WAAgB;AACvB,aAAO;AAAA,QACL,CAAA;AAAA,QACA,OAAO,OAAO,iBAAiB,EAAE,QAAQ;AAAA,MAAA;AAAA,IAE7C;AAAA,IACA,QAAQ,CAAC,WAAgB;AACvB,aAAO;AAAA,QACL,CAAA;AAAA,QACA,OAAO,OAAO,iBAAiB,EAAE,QAAQ;AAAA,MAAA;AAAA,IAE7C;AAAA,EAAA;AAEJ;"}
+exec
+/bin/zsh -lc "cd /Users/e/.superset/worktrees/reviewurr/initialize-project && node -e \"import('@tanstack/react-start').then(m=>{const fn=m.createServerFn({method:'GET'}); console.log('validator', typeof fn.validator); console.log('inputValidator', typeof fn.inputValidator);}).catch(e=>{console.error(e); process.exit(1)})\"" in /Users/e/.superset/worktrees/reviewurr/initialize-project succeeded in 51ms:
+validator undefined
+inputValidator function
+exec
+/bin/zsh -lc "cd /Users/e/.superset/worktrees/reviewurr/initialize-project && bun -e \"import('./src/server/pr.ts').then(()=>console.log('ok')).catch(err=>{console.error(err); process.exit(1)})\"" in /Users/e/.superset/worktrees/reviewurr/initialize-project exited 1 in 87ms:
+1 | import { Database } from 'bun:sqlite'
+2 | 
+3 | const db = new Database('reviewurr.db')
+               ^
+SQLiteError: unable to open database file
+      errno: 14,
+ byteOffset: -1,
+       code: "SQLITE_CANTOPEN"
+
+      at new Database (bun:sqlite:256:28)
+      at /Users/e/.superset/worktrees/reviewurr/initialize-project/src/server/db.ts:3:12
+      at requestImportModule (2:1)
+
+codex
+I found another likely data-integrity issue around SQLite cascades. I’m quickly verifying Bun’s default `foreign_keys` setting to confirm whether orphaned rows can occur.
+exec
+/bin/zsh -lc "cd /Users/e/.superset/worktrees/reviewurr/initialize-project && bun -e \"import { Database } from 'bun:sqlite'; const db=new Database(':memory:'); const row=db.query('PRAGMA foreign_keys').get(); console.log(row);\"" in /Users/e/.superset/worktrees/reviewurr/initialize-project succeeded in 88ms:
+{
+  foreign_keys: 0,
+}
+exec
+/bin/zsh -lc "cd /Users/e/.superset/worktrees/reviewurr/initialize-project && node -e \"import('@tanstack/react-start').then(m=>{try{m.createServerFn({method:'GET'}).validator((d)=>d)}catch(e){console.error(e instanceof Error ? e.message : e)}})\"" in /Users/e/.superset/worktrees/reviewurr/initialize-project succeeded in 51ms:
+m.createServerFn(...).validator is not a function
+exec
+/bin/zsh -lc 'cd /Users/e/.superset/worktrees/reviewurr/initialize-project && nl -ba .gitignore' in /Users/e/.superset/worktrees/reviewurr/initialize-project succeeded in 52ms:
+     1	node_modules/
+     2	.output/
+     3	dist/
+     4	.env
+     5	*.db
+     6	.vinxi/
+     7	.tanstack/
+codex
+**Scope Note**
+`git diff HEAD` is empty in this worktree, so I reviewed the feature branch delta (`main...HEAD`) plus current source state.
+
+**Critical**
+1. `createServerFn(...).validator(...)` is a broken API call and will throw at runtime (`...validator is not a function`).
+Files: [src/server/pr.ts:17](/Users/e/.superset/worktrees/reviewurr/initialize-project/src/server/pr.ts:17), [src/server/pr.ts:18](/Users/e/.superset/worktrees/reviewurr/initialize-project/src/server/pr.ts:18), [src/server/analysis.ts:181](/Users/e/.superset/worktrees/reviewurr/initialize-project/src/server/analysis.ts:181), [src/server/analysis.ts:182](/Users/e/.superset/worktrees/reviewurr/initialize-project/src/server/analysis.ts:182).  
+Fix: replace `.validator(...)` with `.inputValidator(...)` everywhere.
+
+**High**
+1. Re-fetch on PR detail can invalidate the page with a stale route ID.  
+`upsertPR` deletes/reinserts and changes internal `id`, but the page keeps old `/pr/$id`.  
+Files: [src/server/db.ts:64](/Users/e/.superset/worktrees/reviewurr/initialize-project/src/server/db.ts:64), [src/server/db.ts:70](/Users/e/.superset/worktrees/reviewurr/initialize-project/src/server/db.ts:70), [src/routes/pr.$id.tsx:64](/Users/e/.superset/worktrees/reviewurr/initialize-project/src/routes/pr.$id.tsx:64), [src/routes/pr.$id.tsx:65](/Users/e/.superset/worktrees/reviewurr/initialize-project/src/routes/pr.$id.tsx:65).  
+Fix: update PR row in place (keep same id) or navigate to returned new id after refetch.
+
+2. Foreign-key cascades are declared but disabled by default in SQLite (Bun shows `PRAGMA foreign_keys=0`), so deletes can leave orphan data.  
+Files: [src/server/db.ts:6](/Users/e/.superset/worktrees/reviewurr/initialize-project/src/server/db.ts:6), [src/server/db.ts:187](/Users/e/.superset/worktrees/reviewurr/initialize-project/src/server/db.ts:187), [src/server/db.ts:200](/Users/e/.superset/worktrees/reviewurr/initialize-project/src/server/db.ts:200).  
+Fix: execute `PRAGMA foreign_keys = ON` at startup and keep deletes transactional.
+
+**Medium**
+1. Beat shape mismatch: fresh analysis returns `readingOrder`, UI reads `reading_order`, so ordering badge can render blank until reload from DB.
+Files: [src/server/analysis.ts:296](/Users/e/.superset/worktrees/reviewurr/initialize-project/src/server/analysis.ts:296), [src/components/flow/beat-card.tsx:15](/Users/e/.superset/worktrees/reviewurr/initialize-project/src/components/flow/beat-card.tsx:15), [src/components/flow/beat-card.tsx:38](/Users/e/.superset/worktrees/reviewurr/initialize-project/src/components/flow/beat-card.tsx:38).  
+Fix: normalize to one field name across API/UI.
+
+2. File tree is computed once and becomes stale when `files` changes.
+File: [src/components/file-tree.tsx:10](/Users/e/.superset/worktrees/reviewurr/initialize-project/src/components/file-tree.tsx:10).  
+Fix: derive with `useMemo(() => buildFileTree(files), [files])`.
+
+3. External CLI calls have no timeout/abort path, so requests can hang indefinitely.
+Files: [src/server/pr.ts:5](/Users/e/.superset/worktrees/reviewurr/initialize-project/src/server/pr.ts:5), [src/server/analysis.ts:216](/Users/e/.superset/worktrees/reviewurr/initialize-project/src/server/analysis.ts:216), [src/server/analysis.ts:232](/Users/e/.superset/worktrees/reviewurr/initialize-project/src/server/analysis.ts:232).  
+Fix: enforce timeout and kill process on expiry.
+
+**Low**
+1. PR URL parser is permissive and can accept malformed suffixes.
+File: [src/lib/diff-types.ts:134](/Users/e/.superset/worktrees/reviewurr/initialize-project/src/lib/diff-types.ts:134).  
+Fix: tighten regex or parse URL path segments strictly.
+
+2. Test coverage misses server-function chains and refetch-id behavior; that’s why the `validator` break and stale-id flow slipped through.
+Files: [tests/model-settings.test.ts:1](/Users/e/.superset/worktrees/reviewurr/initialize-project/tests/model-settings.test.ts:1), [tests/smoke.test.tsx:1](/Users/e/.superset/worktrees/reviewurr/initialize-project/tests/smoke.test.tsx:1).
+
+Could not run `npm test` in this sandbox because it needs filesystem writes (`EPERM` in `node_modules/.vite-temp`). I did run `npx tsc --noEmit`, which reports multiple compile/type errors consistent with the issues above.
+tokens used
+234,568
