@@ -40,7 +40,7 @@ export const Line = React.memo(function Line({ change, tokens }: LineProps) {
         {indicator}
       </span>
       {/* Code content */}
-      <span className="whitespace-pre overflow-x-auto pr-4">
+      <span className="whitespace-pre pr-4">
         {tokens ? (
           tokens.map((token, i) => (
             <span key={i} style={token.color ? { color: token.color } : undefined}>
