@@ -37,7 +37,53 @@ function ElapsedTimer({ startedAt }: { startedAt: number }) {
   )
 }
 
-function StreamingOutput({ text, label, dimmed }: { text: string; label?: string; dimmed?: boolean }) {
+function ThinkingBox({ text, isActive }: { text: string; isActive: boolean }) {
+  const [expanded, setExpanded] = useState(true)
+  const containerRef = useRef<HTMLPreElement>(null)
+
+  // Auto-collapse when thinking finishes
+  useEffect(() => {
+    if (!isActive && text) {
+      setExpanded(false)
+    }
+  }, [isActive])
+
+  // Auto-scroll while active
+  useEffect(() => {
+    if (expanded && containerRef.current) {
+      containerRef.current.scrollTop = containerRef.current.scrollHeight
+    }
+  }, [text, expanded])
+
+  if (!text) return null
+
+  const displayText = text.length > 3000 ? '...' + text.slice(-3000) : text
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => setExpanded(!expanded)}
+        className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-gh-text/25 mb-1 font-medium hover:text-gh-text/40"
+      >
+        <span>{expanded ? '\u25BE' : '\u25B8'}</span>
+        Thinking
+        {!isActive && <span className="normal-case tracking-normal">({Math.round(text.length / 4)} tokens)</span>}
+      </button>
+      {expanded && (
+        <pre
+          ref={containerRef}
+          className="text-[11px] leading-relaxed font-mono text-gh-text/25 bg-gh-bg/30 italic rounded-lg p-3 max-h-48 overflow-y-auto whitespace-pre-wrap break-words border border-gh-text/5"
+        >
+          {displayText}
+          {isActive && <span className="animate-pulse">|</span>}
+        </pre>
+      )}
+    </div>
+  )
+}
+
+function StreamingOutput({ text }: { text: string }) {
   const containerRef = useRef<HTMLPreElement>(null)
 
   useEffect(() => {
@@ -49,20 +95,13 @@ function StreamingOutput({ text, label, dimmed }: { text: string; label?: string
   const displayText = text.length > 3000 ? '...' + text.slice(-3000) : text
 
   return (
-    <div>
-      {label && (
-        <div className="text-[10px] uppercase tracking-wider text-gh-text/25 mb-1 font-medium">{label}</div>
-      )}
-      <pre
-        ref={containerRef}
-        className={`text-[11px] leading-relaxed font-mono rounded-lg p-3 max-h-48 overflow-y-auto whitespace-pre-wrap break-words border border-gh-text/5 ${
-          dimmed ? 'text-gh-text/25 bg-gh-bg/30 italic' : 'text-gh-text/50 bg-gh-bg/50'
-        }`}
-      >
-        {displayText}
-        <span className="animate-pulse">|</span>
-      </pre>
-    </div>
+    <pre
+      ref={containerRef}
+      className="text-[11px] leading-relaxed font-mono text-gh-text/50 bg-gh-bg/50 rounded-lg p-3 max-h-48 overflow-y-auto whitespace-pre-wrap break-words border border-gh-text/5"
+    >
+      {displayText}
+      <span className="animate-pulse">|</span>
+    </pre>
   )
 }
 
@@ -70,7 +109,6 @@ const MODEL_LABELS: Record<string, string> = {
   'claude-haiku': 'Claude Haiku',
   'claude-sonnet': 'Claude Sonnet',
   'claude-opus': 'Claude Opus',
-  'codex': 'Codex',
 }
 
 export function BeatList({ prId, files, model = 'claude-opus', streamingState, onStreamingStateChange }: BeatListProps) {
@@ -83,7 +121,6 @@ export function BeatList({ prId, files, model = 'claude-opus', streamingState, o
 
   const { startAnalysis } = useStreamingAnalysis(onStreamingStateChange, stateRef)
 
-  // Check for cached beats on mount (only if idle)
   useEffect(() => {
     if (phase !== 'idle') {
       setCacheChecked(true)
@@ -123,10 +160,12 @@ export function BeatList({ prId, files, model = 'claude-opus', streamingState, o
   const isActive = isThinking || isStreaming || isParsing
   const isDone = phase === 'done'
 
-  // Beats to display: cached OR streamed (streamed beats persist in state after done)
+  // Beats: cached, or streamed (persists in state), or from parsing phase
   const displayBeats = cachedBeats ?? (beats.length > 0 ? beats : null)
 
-  // Loading cache check
+  // Show thinking box if we have thinking text (even after done)
+  const hasThinking = thinkingText.length > 0
+
   if (!cacheChecked && phase === 'idle') {
     return (
       <div className="flex items-center justify-center py-12 text-gh-text/50 text-sm">
@@ -135,7 +174,6 @@ export function BeatList({ prId, files, model = 'claude-opus', streamingState, o
     )
   }
 
-  // Empty state — no beats, not doing anything
   if (!displayBeats && !isActive && !isDone && phase !== 'error') {
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-4">
@@ -163,14 +201,14 @@ export function BeatList({ prId, files, model = 'claude-opus', streamingState, o
           )}
           <h2 className="text-sm font-medium text-gh-text/60">
             {isThinking
-              ? `${MODEL_LABELS[model] || model} is thinking...`
+              ? beats.length > 0
+                ? `${MODEL_LABELS[model] || model} is analyzing... (${beats.length} beat${beats.length !== 1 ? 's' : ''} found)`
+                : `${MODEL_LABELS[model] || model} is analyzing...`
               : isStreaming
                 ? `${MODEL_LABELS[model] || model} is writing...`
-                : isParsing
-                  ? `Parsing beats... (${beats.length} so far)`
-                  : displayBeats
-                    ? `${displayBeats.length} beat${displayBeats.length !== 1 ? 's' : ''}`
-                    : ''
+                : displayBeats
+                  ? `${displayBeats.length} beat${displayBeats.length !== 1 ? 's' : ''}`
+                  : ''
             }
           </h2>
           {isActive && startedAt && (
@@ -190,21 +228,21 @@ export function BeatList({ prId, files, model = 'claude-opus', streamingState, o
         )}
       </div>
 
-      {/* Thinking output */}
-      {isThinking && thinkingText && (
-        <StreamingOutput text={thinkingText} label="Thinking" dimmed />
+      {/* Thinking box — stays visible (collapsed) after completion */}
+      {hasThinking && (
+        <ThinkingBox text={thinkingText} isActive={isThinking} />
       )}
 
-      {/* Streaming raw output */}
+      {/* Streaming raw text output */}
       {isStreaming && streamedText && (
         <StreamingOutput text={streamedText} />
       )}
 
-      {/* Beat cards */}
+      {/* Beat cards — show during thinking too since they now arrive incrementally */}
       {displayBeats && displayBeats.map((beat, i) => (
         <div
           key={beat.id || `stream-${i}`}
-          className={isParsing && i === displayBeats.length - 1 ? 'animate-fade-in' : ''}
+          className="animate-fade-in"
         >
           <BeatCard beat={beat} files={files} />
         </div>
