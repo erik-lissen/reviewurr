@@ -124,6 +124,20 @@ export function getCommits(prId: number) {
   ).all(prId)
 }
 
+/** Get per-commit diffs for a PR, joined with commit info */
+export function getCommitDiffs(prId: number) {
+  return db.query<
+    { sha: string; message: string; order_num: number; content: string },
+    [number]
+  >(
+    `SELECT c.sha, c.message, c.order_num, d.content
+     FROM commits c
+     JOIN diffs d ON d.commit_id = c.id
+     WHERE c.pr_id = ?
+     ORDER BY c.order_num`
+  ).all(prId)
+}
+
 /** Get all PRs ordered by most recently fetched */
 export function getAllPRs() {
   return db.query<{
