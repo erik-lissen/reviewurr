@@ -1,43 +1,18 @@
 import { createServerFn } from '@tanstack/react-start'
-import { spawn, execFile } from 'node:child_process'
+import { execFile } from 'node:child_process'
 import {
-  getPRById,
-  getCommits,
-  getCommitDiffs,
-  getFullDiff,
   getBeats,
-  insertBeat,
-  insertBeatHunk,
   deleteBeats,
   getSetting,
   setSetting,
 } from './db'
-import { detectRefs } from '@/lib/detect-refs'
 
-function spawnWithStdin(cmd: string, args: string[], input: string, env: NodeJS.ProcessEnv): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const proc = spawn(cmd, args, { env, stdio: ['pipe', 'pipe', 'pipe'] })
-    let stdout = ''
-    let stderr = ''
-    proc.stdout.on('data', (d: Buffer) => { stdout += d.toString() })
-    proc.stderr.on('data', (d: Buffer) => { stderr += d.toString() })
-    proc.on('close', (code) => {
-      if (code !== 0) reject(new Error(`${cmd} failed (exit ${code}): ${stderr}`))
-      else resolve(stdout)
-    })
-    proc.on('error', reject)
-    proc.stdin.on('error', () => {}) // ignore EPIPE — process may exit before we finish writing
-    proc.stdin.write(input)
-    proc.stdin.end()
-  })
-}
-
-interface BeatFile {
+export interface BeatFile {
   path: string
   relevantHunks: string
 }
 
-interface RawBeat {
+export interface RawBeat {
   title: string
   description: string
   files: BeatFile[]
@@ -45,7 +20,27 @@ interface RawBeat {
   refs?: string[]
 }
 
-function buildPrompt(
+/** Parse raw CLI output into beats array */
+export function parseBeatsFromOutput(output: string): RawBeat[] {
+  // Claude wraps the response in { result: "..." }, Codex returns raw
+  let resultText: string
+  try {
+    const cliOutput = JSON.parse(output)
+    resultText = cliOutput.result || output
+  } catch {
+    resultText = output
+  }
+
+  const jsonMatch = resultText.match(/\{[\s\S]*"beats"[\s\S]*\}/)
+  if (!jsonMatch) {
+    throw new Error(`Failed to parse beats from model output. Raw: ${resultText.slice(0, 500)}`)
+  }
+
+  const parsed: { beats: RawBeat[] } = JSON.parse(jsonMatch[0])
+  return parsed.beats
+}
+
+export function buildPrompt(
   pr: {
     title: string
     body: string | null
@@ -205,101 +200,6 @@ export const setPreferredModel = createServerFn({ method: 'POST' })
   .handler(async ({ data: { model } }) => {
     setSetting('preferred_model', model)
     return { ok: true }
-  })
-
-/** Run analysis on a PR using Claude CLI or Codex */
-export const analyzePR = createServerFn({ method: 'POST' })
-  .inputValidator((d: { prId: number; model?: string }) => d)
-  .handler(async ({ data: { prId, model: requestedModel } }) => {
-    const pr = getPRById(prId)
-    if (!pr) throw new Error(`PR not found: ${prId}`)
-
-    const commitDiffs = getCommitDiffs(prId)
-    const diffRow = getFullDiff(prId)
-    if (!diffRow) throw new Error(`No diff found for PR: ${prId}`)
-
-    // Extract file list from the full diff
-    const fileList: string[] = []
-    const fileMatches = diffRow.content.matchAll(/^\+\+\+ b\/(.+)$/gm)
-    for (const m of fileMatches) {
-      if (m[1] && m[1] !== '/dev/null') fileList.push(m[1])
-    }
-
-    const prompt = buildPrompt(pr, commitDiffs, diffRow.content, fileList)
-    const model = requestedModel || 'claude-opus'
-
-    // Shell out to CLI — unset CLAUDECODE env var regardless of model
-    const env = { ...process.env }
-    delete (env as Record<string, string | undefined>).CLAUDECODE
-
-    let output: string
-
-    if (model === 'codex') {
-      output = await spawnWithStdin('codex', ['exec', '-'], prompt, env)
-    } else {
-      const modelId = model === 'claude-opus' ? 'claude-opus-4-6' : 'claude-sonnet-4-6'
-      output = await spawnWithStdin('claude', ['-p', '--model', modelId, '--output-format', 'json'], prompt, env)
-    }
-
-    // Parse CLI output — Claude wraps the response in { result: "..." }, Codex returns raw
-    let resultText: string
-    try {
-      const cliOutput = JSON.parse(output)
-      resultText = cliOutput.result || output
-    } catch {
-      resultText = output
-    }
-
-    // Extract the beats JSON from the response
-    const jsonMatch = resultText.match(/\{[\s\S]*"beats"[\s\S]*\}/)
-    if (!jsonMatch) {
-      throw new Error(`Failed to parse beats from model output. Raw: ${resultText.slice(0, 500)}`)
-    }
-
-    let parsed: { beats: RawBeat[] }
-    try {
-      parsed = JSON.parse(jsonMatch[0])
-    } catch (e) {
-      throw new Error(`Invalid JSON in model output: ${(e as Error).message}`)
-    }
-
-    // Clear any existing beats for this PR+model
-    deleteBeats(prId, model)
-
-    // Store beats in SQLite
-    const storedBeats = []
-    for (const beat of parsed.beats) {
-      // Detect refs from title, description, and any explicit refs
-      const allText = [beat.title, beat.description, ...(beat.refs || [])].join(' ')
-      const detectedRefs = detectRefs(allText)
-
-      const beatId = insertBeat(
-        prId,
-        beat.title,
-        beat.description,
-        beat.readingOrder,
-        detectedRefs.length > 0 ? JSON.stringify(detectedRefs) : null,
-        model
-      )
-
-      for (const file of beat.files) {
-        insertBeatHunk(beatId, file.path, file.relevantHunks || 'all')
-      }
-
-      storedBeats.push({
-        id: beatId,
-        title: beat.title,
-        description: beat.description,
-        readingOrder: beat.readingOrder,
-        refs: detectedRefs,
-        hunks: beat.files.map((f) => ({
-          file_path: f.path,
-          hunk_spec: f.relevantHunks || 'all',
-        })),
-      })
-    }
-
-    return storedBeats
   })
 
 /** Get cached beats for a PR */

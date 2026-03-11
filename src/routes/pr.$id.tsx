@@ -3,9 +3,10 @@ import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
 import { getPRData, checkPRUpdate, fetchPR } from '@/server/pr'
 import { DiffRenderer, type ViewMode } from '@/components/diff-renderer'
 import { FileTree } from '@/components/file-tree'
-import { BeatList, initialAnalysisState, type AnalysisState } from '@/components/flow/beat-list'
+import { BeatList } from '@/components/flow/beat-list'
 import { ModelSelector, type ModelOption } from '@/components/flow/model-selector'
 import { getPreferredModel, setPreferredModel } from '@/server/analysis'
+import { initialStreamingState, type StreamingState } from '@/lib/use-streaming-analysis'
 
 export const Route = createFileRoute('/pr/$id')({
   component: PrDetail,
@@ -17,15 +18,17 @@ function PrDetail() {
   const [activeTab, setActiveTab] = useState<'files' | 'flow'>('files')
   const [viewMode, setViewMode] = useState<ViewMode>('unified')
   const [selectedModel, setSelectedModel] = useState<ModelOption>('claude-opus')
-  const analysisStateRef = useRef<Record<string, AnalysisState>>({})
 
-  const getAnalysisState = (model: string): AnalysisState => {
-    return analysisStateRef.current[model] ?? initialAnalysisState
+  // Streaming state per model — persists across tab switches
+  const streamingStates = useRef<Record<string, StreamingState>>({})
+  const [, forceUpdate] = useState(0)
+
+  const getStreamingState = (model: string): StreamingState => {
+    return streamingStates.current[model] ?? initialStreamingState
   }
 
-  const [, forceUpdate] = useState(0)
-  const setAnalysisState = (state: AnalysisState) => {
-    analysisStateRef.current[selectedModel] = state
+  const setStreamingState = (state: StreamingState) => {
+    streamingStates.current[selectedModel] = state
     forceUpdate((n) => n + 1)
   }
 
@@ -190,8 +193,8 @@ function PrDetail() {
               prId={pr.id}
               files={files}
               model={selectedModel}
-              analysisState={getAnalysisState(selectedModel)}
-              onAnalysisStateChange={setAnalysisState}
+              streamingState={getStreamingState(selectedModel)}
+              onStreamingStateChange={setStreamingState}
             />
           )}
         </div>
