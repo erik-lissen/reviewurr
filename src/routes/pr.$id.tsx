@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
 import { getPRData, checkPRUpdate, fetchPR } from '@/server/pr'
 import { DiffRenderer, type ViewMode } from '@/components/diff-renderer'
 import { FileTree } from '@/components/file-tree'
-import { BeatList } from '@/components/flow/beat-list'
+import { BeatList, initialAnalysisState, type AnalysisState } from '@/components/flow/beat-list'
 import { ModelSelector, type ModelOption } from '@/components/flow/model-selector'
 import { getPreferredModel, setPreferredModel } from '@/server/analysis'
 
@@ -17,6 +17,17 @@ function PrDetail() {
   const [activeTab, setActiveTab] = useState<'files' | 'flow'>('files')
   const [viewMode, setViewMode] = useState<ViewMode>('unified')
   const [selectedModel, setSelectedModel] = useState<ModelOption>('claude-opus')
+  const analysisStateRef = useRef<Record<string, AnalysisState>>({})
+
+  const getAnalysisState = (model: string): AnalysisState => {
+    return analysisStateRef.current[model] ?? initialAnalysisState
+  }
+
+  const [, forceUpdate] = useState(0)
+  const setAnalysisState = (state: AnalysisState) => {
+    analysisStateRef.current[selectedModel] = state
+    forceUpdate((n) => n + 1)
+  }
 
   // Load preferred model from settings on mount
   useEffect(() => {
@@ -175,7 +186,13 @@ function PrDetail() {
           {activeTab === 'files' ? (
             <DiffRenderer files={files} viewMode={viewMode} />
           ) : (
-            <BeatList prId={pr.id} files={files} model={selectedModel} />
+            <BeatList
+              prId={pr.id}
+              files={files}
+              model={selectedModel}
+              analysisState={getAnalysisState(selectedModel)}
+              onAnalysisStateChange={setAnalysisState}
+            />
           )}
         </div>
         <FileTree files={files} />
