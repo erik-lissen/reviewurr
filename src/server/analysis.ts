@@ -26,6 +26,7 @@ function spawnWithStdin(cmd: string, args: string[], input: string, env: NodeJS.
       else resolve(stdout)
     })
     proc.on('error', reject)
+    proc.stdin.on('error', () => {}) // ignore EPIPE — process may exit before we finish writing
     proc.stdin.write(input)
     proc.stdin.end()
   })
@@ -234,7 +235,7 @@ export const analyzePR = createServerFn({ method: 'POST' })
     let output: string
 
     if (model === 'codex') {
-      output = await spawnWithStdin('codex', ['-q', '--model', 'codex-mini-latest'], prompt, env)
+      output = await spawnWithStdin('codex', ['exec', '-'], prompt, env)
     } else {
       const modelId = model === 'claude-opus' ? 'claude-opus-4-6' : 'claude-sonnet-4-6'
       output = await spawnWithStdin('claude', ['-p', '--model', modelId, '--output-format', 'json'], prompt, env)
