@@ -7,6 +7,7 @@ import {
 } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
 import appCss from '@/styles/app.css?url'
+import { ThemeSelector } from '@/components/theme-selector'
 
 export const Route = createRootRoute({
   head: () => ({
@@ -28,11 +29,12 @@ function RootComponent() {
           <Link to="/" className="text-lg font-semibold text-gh-accent hover:opacity-80">
             reviewurr
           </Link>
-          <nav className="flex gap-4 text-sm text-gh-text/70">
+          <nav className="flex gap-4 text-sm text-gh-text/70 flex-1">
             <Link to="/" className="hover:text-gh-text" activeProps={{ className: 'text-gh-text' }}>
               Home
             </Link>
           </nav>
+          <ThemeSelector />
         </header>
         <main className="px-6 py-4">
           <Outlet />

@@ -1,11 +1,67 @@
 @import "tailwindcss";
 
 @theme {
-  --color-gh-bg: #0d1117;
-  --color-gh-secondary: #161b22;
-  --color-gh-text: #c9d1d9;
-  --color-gh-accent: #58a6ff;
-  --color-gh-green: #3fb950;
-  --color-gh-red: #f85149;
-  --color-gh-tertiary: #21262d;
+  --color-gh-bg: var(--theme-bg);
+  --color-gh-secondary: var(--theme-secondary);
+  --color-gh-text: var(--theme-text);
+  --color-gh-accent: var(--theme-accent);
+  --color-gh-green: var(--theme-green);
+  --color-gh-red: var(--theme-red);
+  --color-gh-tertiary: var(--theme-tertiary);
+}
+
+/* GitHub Dark (default) */
+:root,
+[data-theme="github-dark"] {
+  --theme-bg: #0d1117;
+  --theme-secondary: #161b22;
+  --theme-text: #c9d1d9;
+  --theme-accent: #58a6ff;
+  --theme-green: #3fb950;
+  --theme-red: #f85149;
+  --theme-tertiary: #21262d;
+}
+
+/* GitHub Dimmed */
+[data-theme="github-dimmed"] {
+  --theme-bg: #22272e;
+  --theme-secondary: #2d333b;
+  --theme-text: #adbac7;
+  --theme-accent: #539bf5;
+  --theme-green: #57ab5a;
+  --theme-red: #e5534b;
+  --theme-tertiary: #373e47;
+}
+
+/* Monokai */
+[data-theme="monokai"] {
+  --theme-bg: #272822;
+  --theme-secondary: #2e2f2a;
+  --theme-text: #f8f8f2;
+  --theme-accent: #66d9ef;
+  --theme-green: #a6e22e;
+  --theme-red: #f92672;
+  --theme-tertiary: #3e3d32;
+}
+
+/* Solarized Dark */
+[data-theme="solarized-dark"] {
+  --theme-bg: #002b36;
+  --theme-secondary: #073642;
+  --theme-text: #839496;
+  --theme-accent: #268bd2;
+  --theme-green: #859900;
+  --theme-red: #dc322f;
+  --theme-tertiary: #0a4050;
+}
+
+/* Nord */
+[data-theme="nord"] {
+  --theme-bg: #2e3440;
+  --theme-secondary: #3b4252;
+  --theme-text: #d8dee9;
+  --theme-accent: #88c0d0;
+  --theme-green: #a3be8c;
+  --theme-red: #bf616a;
+  --theme-tertiary: #434c5e;
 }
