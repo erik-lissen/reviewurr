@@ -75,20 +75,20 @@ export const Route = createFileRoute('/api/analyze')({
               for await (const message of conversation) {
                 if (message.type === 'stream_event') {
                   const event = (message as any).event
-                  if (event?.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
-                    const text = event.delta.text
-                    fullOutput += text
-                    send('chunk', { text })
-                  }
-                } else if (message.type === 'assistant') {
-                  // Complete assistant message — extract full text if we missed any
-                  const content = (message as any).message?.content
-                  if (content && Array.isArray(content)) {
-                    const textBlocks = content.filter((b: any) => b.type === 'text')
-                    const completeText = textBlocks.map((b: any) => b.text).join('')
-                    if (completeText && !fullOutput) {
-                      fullOutput = completeText
+                  if (event?.type === 'content_block_delta') {
+                    const delta = event.delta
+                    if (delta?.type === 'text_delta') {
+                      fullOutput += delta.text
+                      send('chunk', { text: delta.text })
+                    } else if (delta?.type === 'thinking_delta' && delta.thinking) {
+                      send('thinking', { text: delta.thinking })
                     }
+                  }
+                } else if (message.type === 'result') {
+                  // Extract full text from the result if streaming missed it
+                  const result = (message as any).result
+                  if (result && !fullOutput) {
+                    fullOutput = result
                   }
                 }
               }

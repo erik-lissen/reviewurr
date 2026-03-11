@@ -2,7 +2,8 @@ import { useRef, useCallback } from 'react'
 import type { Beat } from '@/components/flow/beat-card'
 
 export interface StreamingState {
-  phase: 'idle' | 'streaming' | 'parsing' | 'done' | 'error'
+  phase: 'idle' | 'thinking' | 'streaming' | 'parsing' | 'done' | 'error'
+  thinkingText: string
   streamedText: string
   beats: Beat[]
   error: string | null
@@ -11,6 +12,7 @@ export interface StreamingState {
 
 export const initialStreamingState: StreamingState = {
   phase: 'idle',
+  thinkingText: '',
   streamedText: '',
   beats: [],
   error: null,
@@ -25,14 +27,14 @@ export function useStreamingAnalysis(
 
   const startAnalysis = useCallback(
     async (prId: number, model: string) => {
-      // Abort any existing analysis
       abortRef.current?.abort()
 
       const controller = new AbortController()
       abortRef.current = controller
 
       onStateChange({
-        phase: 'streaming',
+        phase: 'thinking',
+        thinkingText: '',
         streamedText: '',
         beats: [],
         error: null,
@@ -61,9 +63,8 @@ export function useStreamingAnalysis(
 
           buffer += decoder.decode(value, { stream: true })
 
-          // Parse SSE events from buffer
           const lines = buffer.split('\n')
-          buffer = lines.pop() || '' // keep incomplete line in buffer
+          buffer = lines.pop() || ''
 
           let eventType = ''
           for (const line of lines) {
@@ -74,6 +75,14 @@ export function useStreamingAnalysis(
               const current = stateRef.current!
 
               switch (eventType) {
+                case 'thinking': {
+                  onStateChange({
+                    ...current,
+                    phase: 'thinking',
+                    thinkingText: current.thinkingText + data.text,
+                  })
+                  break
+                }
                 case 'chunk': {
                   onStateChange({
                     ...current,
@@ -114,12 +123,14 @@ export function useStreamingAnalysis(
       } catch (e) {
         if ((e as Error).name === 'AbortError') return
 
+        const current = stateRef.current
         onStateChange({
           phase: 'error',
-          streamedText: stateRef.current?.streamedText || '',
-          beats: stateRef.current?.beats || [],
+          thinkingText: current?.thinkingText || '',
+          streamedText: current?.streamedText || '',
+          beats: current?.beats || [],
           error: (e as Error).message,
-          startedAt: stateRef.current?.startedAt || null,
+          startedAt: current?.startedAt || null,
         })
       }
     },

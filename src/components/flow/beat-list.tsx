@@ -37,7 +37,7 @@ function ElapsedTimer({ startedAt }: { startedAt: number }) {
   )
 }
 
-function StreamingOutput({ text }: { text: string }) {
+function StreamingOutput({ text, label, dimmed }: { text: string; label?: string; dimmed?: boolean }) {
   const containerRef = useRef<HTMLPreElement>(null)
 
   useEffect(() => {
@@ -46,16 +46,23 @@ function StreamingOutput({ text }: { text: string }) {
     }
   }, [text])
 
-  const displayText = text.length > 2000 ? '...' + text.slice(-2000) : text
+  const displayText = text.length > 3000 ? '...' + text.slice(-3000) : text
 
   return (
-    <pre
-      ref={containerRef}
-      className="text-[11px] leading-relaxed font-mono text-gh-text/40 bg-gh-bg/50 rounded-lg p-3 max-h-48 overflow-y-auto whitespace-pre-wrap break-all border border-gh-text/5"
-    >
-      {displayText}
-      <span className="animate-pulse">|</span>
-    </pre>
+    <div>
+      {label && (
+        <div className="text-[10px] uppercase tracking-wider text-gh-text/25 mb-1 font-medium">{label}</div>
+      )}
+      <pre
+        ref={containerRef}
+        className={`text-[11px] leading-relaxed font-mono rounded-lg p-3 max-h-48 overflow-y-auto whitespace-pre-wrap break-words border border-gh-text/5 ${
+          dimmed ? 'text-gh-text/25 bg-gh-bg/30 italic' : 'text-gh-text/50 bg-gh-bg/50'
+        }`}
+      >
+        {displayText}
+        <span className="animate-pulse">|</span>
+      </pre>
+    </div>
   )
 }
 
@@ -67,7 +74,7 @@ const MODEL_LABELS: Record<string, string> = {
 }
 
 export function BeatList({ prId, files, model = 'claude-opus', streamingState, onStreamingStateChange }: BeatListProps) {
-  const { phase, streamedText, beats, error, startedAt } = streamingState
+  const { phase, thinkingText, streamedText, beats, error, startedAt } = streamingState
   const [cachedBeats, setCachedBeats] = useState<Beat[] | null>(null)
   const [cacheChecked, setCacheChecked] = useState(false)
 
@@ -110,9 +117,10 @@ export function BeatList({ prId, files, model = 'claude-opus', streamingState, o
     setTimeout(() => startAnalysis(prId, model), 0)
   }
 
+  const isThinking = phase === 'thinking'
   const isStreaming = phase === 'streaming'
   const isParsing = phase === 'parsing'
-  const isActive = isStreaming || isParsing
+  const isActive = isThinking || isStreaming || isParsing
   const isDone = phase === 'done'
 
   // Beats to display: cached OR streamed (streamed beats persist in state after done)
@@ -154,13 +162,15 @@ export function BeatList({ prId, files, model = 'claude-opus', streamingState, o
             <div className="h-3.5 w-3.5 rounded-full border-2 border-gh-accent border-t-transparent animate-spin" />
           )}
           <h2 className="text-sm font-medium text-gh-text/60">
-            {isStreaming
+            {isThinking
               ? `${MODEL_LABELS[model] || model} is thinking...`
-              : isParsing
-                ? `Parsing beats... (${beats.length} so far)`
-                : displayBeats
-                  ? `${displayBeats.length} beat${displayBeats.length !== 1 ? 's' : ''}`
-                  : ''
+              : isStreaming
+                ? `${MODEL_LABELS[model] || model} is writing...`
+                : isParsing
+                  ? `Parsing beats... (${beats.length} so far)`
+                  : displayBeats
+                    ? `${displayBeats.length} beat${displayBeats.length !== 1 ? 's' : ''}`
+                    : ''
             }
           </h2>
           {isActive && startedAt && (
@@ -179,6 +189,11 @@ export function BeatList({ prId, files, model = 'claude-opus', streamingState, o
           </button>
         )}
       </div>
+
+      {/* Thinking output */}
+      {isThinking && thinkingText && (
+        <StreamingOutput text={thinkingText} label="Thinking" dimmed />
+      )}
 
       {/* Streaming raw output */}
       {isStreaming && streamedText && (
