@@ -1,5 +1,4 @@
 import { createServerFn } from '@tanstack/react-start'
-import { execFile } from 'node:child_process'
 import {
   getBeats,
   deleteBeats,
@@ -159,37 +158,11 @@ Order files for maximum reviewer comprehension:
   return prompt
 }
 
-// Cached codex availability check (once per server lifetime)
-let codexAvailableCache: boolean | null = null
-
-async function checkCodexInstalled(): Promise<boolean> {
-  if (codexAvailableCache !== null) return codexAvailableCache
-  try {
-    await new Promise<void>((resolve, reject) => {
-      execFile('codex', ['--version'], (err) => {
-        if (err) reject(err)
-        else resolve()
-      })
-    })
-    codexAvailableCache = true
-  } catch {
-    codexAvailableCache = false
-  }
-  return codexAvailableCache
-}
-
-/** Check if codex CLI is available */
-export const checkCodexAvailable = createServerFn({ method: 'GET' })
-  .handler(async () => {
-    const available = await checkCodexInstalled()
-    return { available }
-  })
-
 /** Get the preferred model from settings */
 export const getPreferredModel = createServerFn({ method: 'GET' })
   .handler(async () => {
     const model = getSetting('preferred_model')
-    if (model === 'codex') return 'codex' as const
+    if (model === 'claude-haiku') return 'claude-haiku' as const
     if (model === 'claude-sonnet') return 'claude-sonnet' as const
     return 'claude-opus' as const
   })

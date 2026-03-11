@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PrIdRouteImport } from './routes/pr.$id'
+import { Route as ApiAnalyzeRouteImport } from './routes/api/analyze'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -22,30 +23,39 @@ const PrIdRoute = PrIdRouteImport.update({
   path: '/pr/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAnalyzeRoute = ApiAnalyzeRouteImport.update({
+  id: '/api/analyze',
+  path: '/api/analyze',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api/analyze': typeof ApiAnalyzeRoute
   '/pr/$id': typeof PrIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api/analyze': typeof ApiAnalyzeRoute
   '/pr/$id': typeof PrIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api/analyze': typeof ApiAnalyzeRoute
   '/pr/$id': typeof PrIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/pr/$id'
+  fullPaths: '/' | '/api/analyze' | '/pr/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/pr/$id'
-  id: '__root__' | '/' | '/pr/$id'
+  to: '/' | '/api/analyze' | '/pr/$id'
+  id: '__root__' | '/' | '/api/analyze' | '/pr/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiAnalyzeRoute: typeof ApiAnalyzeRoute
   PrIdRoute: typeof PrIdRoute
 }
 
@@ -65,11 +75,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/analyze': {
+      id: '/api/analyze'
+      path: '/api/analyze'
+      fullPath: '/api/analyze'
+      preLoaderRoute: typeof ApiAnalyzeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiAnalyzeRoute: ApiAnalyzeRoute,
   PrIdRoute: PrIdRoute,
 }
 export const routeTree = rootRouteImport

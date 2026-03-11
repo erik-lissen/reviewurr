@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { spawn } from 'node:child_process'
+import Anthropic from '@anthropic-ai/sdk'
 import {
   getPRById,
   getCommitDiffs,
@@ -8,8 +8,14 @@ import {
   insertBeat,
   insertBeatHunk,
 } from '@/server/db'
-import { buildPrompt, parseBeatsFromOutput, type RawBeat } from '@/server/analysis'
+import { buildPrompt, parseBeatsFromOutput } from '@/server/analysis'
 import { detectRefs } from '@/lib/detect-refs'
+
+const MODEL_IDS: Record<string, string> = {
+  'claude-opus': 'claude-opus-4-6',
+  'claude-sonnet': 'claude-sonnet-4-6',
+  'claude-haiku': 'claude-haiku-4-5-20251001',
+}
 
 export const Route = createFileRoute('/api/analyze')({
   server: {
@@ -35,64 +41,43 @@ export const Route = createFileRoute('/api/analyze')({
         }
 
         const prompt = buildPrompt(pr, commitDiffs, diffRow.content, fileList)
+        const modelId = MODEL_IDS[model]
 
-        const env = { ...process.env } as Record<string, string | undefined>
-        delete env.CLAUDECODE
-
-        // Determine CLI command and args
-        let cmd: string
-        let args: string[]
-
-        if (model === 'codex') {
-          cmd = 'codex'
-          args = ['exec', '-']
-        } else {
-          cmd = 'claude'
-          const modelId = model === 'claude-opus' ? 'claude-opus-4-6' : 'claude-sonnet-4-6'
-          args = ['-p', '--model', modelId, '--output-format', 'json']
+        if (!modelId) {
+          return new Response(JSON.stringify({ error: `Unsupported model: ${model}` }), { status: 400 })
         }
 
+        const client = new Anthropic()
+
         const stream = new ReadableStream({
-          start(controller) {
+          async start(controller) {
             const encoder = new TextEncoder()
 
             function send(event: string, data: unknown) {
               controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`))
             }
 
-            const proc = spawn(cmd, args, {
-              env: env as NodeJS.ProcessEnv,
-              stdio: ['pipe', 'pipe', 'pipe'],
-            })
-
             let fullOutput = ''
 
-            proc.stdout.on('data', (chunk: Buffer) => {
-              const text = chunk.toString()
-              fullOutput += text
-              send('chunk', { text })
-            })
+            try {
+              const messageStream = client.messages.stream({
+                model: modelId,
+                max_tokens: 16384,
+                messages: [{ role: 'user', content: prompt }],
+              })
 
-            proc.stderr.on('data', (chunk: Buffer) => {
-              // Send stderr as status updates (some CLIs write progress to stderr)
-              const text = chunk.toString().trim()
-              if (text) {
-                send('status', { text })
-              }
-            })
+              messageStream.on('text', (text) => {
+                fullOutput += text
+                send('chunk', { text })
+              })
 
-            proc.on('close', (code) => {
-              if (code !== 0) {
-                send('error', { message: `${cmd} exited with code ${code}` })
-                controller.close()
-                return
-              }
+              // Wait for the stream to complete
+              await messageStream.finalMessage()
 
+              // Parse and store beats
               try {
-                // Parse the output into beats
                 const beats = parseBeatsFromOutput(fullOutput)
 
-                // Store in DB
                 deleteBeats(prId, model)
                 const storedBeats = []
 
@@ -126,26 +111,18 @@ export const Route = createFileRoute('/api/analyze')({
                   }
 
                   storedBeats.push(storedBeat)
-                  // Send each beat as it's stored
                   send('beat', storedBeat)
                 }
 
                 send('done', { count: storedBeats.length })
               } catch (e) {
-                send('error', { message: (e as Error).message })
+                send('error', { message: `Parse error: ${(e as Error).message}` })
               }
+            } catch (e) {
+              send('error', { message: (e as Error).message })
+            }
 
-              controller.close()
-            })
-
-            proc.on('error', (err) => {
-              send('error', { message: err.message })
-              controller.close()
-            })
-
-            proc.stdin.on('error', () => {}) // ignore EPIPE
-            proc.stdin.write(prompt)
-            proc.stdin.end()
+            controller.close()
           },
         })
 

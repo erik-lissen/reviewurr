@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import type { DiffFile } from '@/lib/diff-types'
 import { BeatCard, type Beat } from './beat-card'
 import { getCachedBeats, clearBeats } from '@/server/analysis'
@@ -46,7 +46,6 @@ function StreamingOutput({ text }: { text: string }) {
     }
   }, [text])
 
-  // Show last ~2000 chars to keep it performant
   const displayText = text.length > 2000 ? '...' + text.slice(-2000) : text
 
   return (
@@ -61,26 +60,26 @@ function StreamingOutput({ text }: { text: string }) {
 }
 
 const MODEL_LABELS: Record<string, string> = {
-  'claude-opus': 'Claude Opus',
+  'claude-haiku': 'Claude Haiku',
   'claude-sonnet': 'Claude Sonnet',
+  'claude-opus': 'Claude Opus',
   'codex': 'Codex',
 }
 
 export function BeatList({ prId, files, model = 'claude-opus', streamingState, onStreamingStateChange }: BeatListProps) {
   const { phase, streamedText, beats, error, startedAt } = streamingState
-  const [loaded, setLoaded] = useState(false)
   const [cachedBeats, setCachedBeats] = useState<Beat[] | null>(null)
+  const [cacheChecked, setCacheChecked] = useState(false)
 
   const stateRef = useRef(streamingState)
   stateRef.current = streamingState
 
-  const { startAnalysis, cancel } = useStreamingAnalysis(onStreamingStateChange, stateRef)
+  const { startAnalysis } = useStreamingAnalysis(onStreamingStateChange, stateRef)
 
-  // Check for cached beats on mount
+  // Check for cached beats on mount (only if idle)
   useEffect(() => {
-    if (loaded) return
     if (phase !== 'idle') {
-      setLoaded(true)
+      setCacheChecked(true)
       return
     }
 
@@ -89,15 +88,15 @@ export function BeatList({ prId, files, model = 'claude-opus', streamingState, o
       .then((cached) => {
         if (cancelled) return
         setCachedBeats(cached as Beat[] | null)
-        setLoaded(true)
+        setCacheChecked(true)
       })
       .catch(() => {
         if (cancelled) return
-        setLoaded(true)
+        setCacheChecked(true)
       })
 
     return () => { cancelled = true }
-  }, [prId, model, phase])
+  }, [prId, model])
 
   const handleAnalyze = () => {
     setCachedBeats(null)
@@ -108,15 +107,19 @@ export function BeatList({ prId, files, model = 'claude-opus', streamingState, o
     await clearBeats({ data: { prId, model } })
     setCachedBeats(null)
     onStreamingStateChange(initialStreamingState)
-    // Small tick so state settles
     setTimeout(() => startAnalysis(prId, model), 0)
   }
 
-  // Use cached beats or streamed beats
-  const displayBeats = cachedBeats || (beats.length > 0 ? beats : null)
-  const isActive = phase === 'streaming' || phase === 'parsing'
+  const isStreaming = phase === 'streaming'
+  const isParsing = phase === 'parsing'
+  const isActive = isStreaming || isParsing
+  const isDone = phase === 'done'
 
-  if (!loaded && phase === 'idle') {
+  // Beats to display: cached OR streamed (streamed beats persist in state after done)
+  const displayBeats = cachedBeats ?? (beats.length > 0 ? beats : null)
+
+  // Loading cache check
+  if (!cacheChecked && phase === 'idle') {
     return (
       <div className="flex items-center justify-center py-12 text-gh-text/50 text-sm">
         Loading...
@@ -124,8 +127,8 @@ export function BeatList({ prId, files, model = 'claude-opus', streamingState, o
     )
   }
 
-  // Idle state — no beats, not analyzing
-  if (!displayBeats && !isActive && phase !== 'error') {
+  // Empty state — no beats, not doing anything
+  if (!displayBeats && !isActive && !isDone && phase !== 'error') {
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-4">
         <p className="text-gh-text/50 text-sm">
@@ -151,13 +154,13 @@ export function BeatList({ prId, files, model = 'claude-opus', streamingState, o
             <div className="h-3.5 w-3.5 rounded-full border-2 border-gh-accent border-t-transparent animate-spin" />
           )}
           <h2 className="text-sm font-medium text-gh-text/60">
-            {isActive
-              ? phase === 'streaming'
-                ? `${MODEL_LABELS[model] || model} is thinking...`
-                : 'Parsing beats...'
-              : phase === 'done' || displayBeats
-                ? `${(displayBeats || []).length} beat${(displayBeats || []).length !== 1 ? 's' : ''}`
-                : ''
+            {isStreaming
+              ? `${MODEL_LABELS[model] || model} is thinking...`
+              : isParsing
+                ? `Parsing beats... (${beats.length} so far)`
+                : displayBeats
+                  ? `${displayBeats.length} beat${displayBeats.length !== 1 ? 's' : ''}`
+                  : ''
             }
           </h2>
           {isActive && startedAt && (
@@ -177,22 +180,22 @@ export function BeatList({ prId, files, model = 'claude-opus', streamingState, o
         )}
       </div>
 
-      {/* Streaming output */}
-      {phase === 'streaming' && streamedText && (
+      {/* Streaming raw output */}
+      {isStreaming && streamedText && (
         <StreamingOutput text={streamedText} />
       )}
 
-      {/* Beats — show as they arrive during parsing, or cached */}
+      {/* Beat cards */}
       {displayBeats && displayBeats.map((beat, i) => (
         <div
-          key={beat.id || `streaming-${i}`}
-          className={phase === 'parsing' && i === displayBeats.length - 1 ? 'animate-fade-in' : ''}
+          key={beat.id || `stream-${i}`}
+          className={isParsing && i === displayBeats.length - 1 ? 'animate-fade-in' : ''}
         >
           <BeatCard beat={beat} files={files} />
         </div>
       ))}
 
-      {/* Error */}
+      {/* Error with retry */}
       {error && (
         <div className="p-3 rounded-lg bg-red-900/30 border border-red-500/30 text-red-300 text-xs">
           {error}

@@ -10,6 +10,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.78.0",
     "@tanstack/react-router": "^1.114.3",
     "@tanstack/react-start": "^1.114.3",
     "better-sqlite3": "^12.6.2",
