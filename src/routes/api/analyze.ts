@@ -1,5 +1,4 @@
 import { createFileRoute } from '@tanstack/react-router'
-import Anthropic from '@anthropic-ai/sdk'
 import {
   getPRById,
   getCommitDiffs,
@@ -47,8 +46,6 @@ export const Route = createFileRoute('/api/analyze')({
           return new Response(JSON.stringify({ error: `Unsupported model: ${model}` }), { status: 400 })
         }
 
-        const client = new Anthropic()
-
         const stream = new ReadableStream({
           async start(controller) {
             const encoder = new TextEncoder()
@@ -60,21 +57,49 @@ export const Route = createFileRoute('/api/analyze')({
             let fullOutput = ''
 
             try {
-              const messageStream = client.messages.stream({
-                model: modelId,
-                max_tokens: 16384,
-                messages: [{ role: 'user', content: prompt }],
+              const { query } = await import('@anthropic-ai/claude-agent-sdk')
+              const conversation = query({
+                prompt,
+                options: {
+                  model: modelId,
+                  includePartialMessages: true,
+                  maxTurns: 1,
+                  allowedTools: [],
+                  env: {
+                    ...process.env,
+                    CLAUDECODE: '',
+                  },
+                },
               })
 
-              messageStream.on('text', (text) => {
-                fullOutput += text
-                send('chunk', { text })
-              })
-
-              // Wait for the stream to complete
-              await messageStream.finalMessage()
+              for await (const message of conversation) {
+                if (message.type === 'stream_event') {
+                  const event = (message as any).event
+                  if (event?.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
+                    const text = event.delta.text
+                    fullOutput += text
+                    send('chunk', { text })
+                  }
+                } else if (message.type === 'assistant') {
+                  // Complete assistant message — extract full text if we missed any
+                  const content = (message as any).message?.content
+                  if (content && Array.isArray(content)) {
+                    const textBlocks = content.filter((b: any) => b.type === 'text')
+                    const completeText = textBlocks.map((b: any) => b.text).join('')
+                    if (completeText && !fullOutput) {
+                      fullOutput = completeText
+                    }
+                  }
+                }
+              }
 
               // Parse and store beats
+              if (!fullOutput) {
+                send('error', { message: 'No output from model' })
+                controller.close()
+                return
+              }
+
               try {
                 const beats = parseBeatsFromOutput(fullOutput)
 

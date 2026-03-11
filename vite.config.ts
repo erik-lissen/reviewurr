@@ -11,6 +11,9 @@ export default defineConfig({
   worker: {
     format: 'es',
   },
+  ssr: {
+    external: ['@anthropic-ai/claude-agent-sdk'],
+  },
   plugins: [
     tailwindcss(),
     tsconfigPaths(),
