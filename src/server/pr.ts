@@ -1,21 +1,23 @@
 import { createServerFn } from '@tanstack/react-start'
+import { execFile } from 'node:child_process'
 import { upsertPR, insertCommit, insertDiff, getPRById, getFullDiff, getCommits, getAllPRs } from './db'
 import { parseDiff } from '@/lib/diff-types'
 
-async function runGh(args: string[]): Promise<string> {
-  const proc = Bun.spawn(['gh', ...args], { stdout: 'pipe', stderr: 'pipe' })
-  const output = await new Response(proc.stdout).text()
-  const exitCode = await proc.exited
-  if (exitCode !== 0) {
-    const stderr = await new Response(proc.stderr).text()
-    throw new Error(`gh command failed: gh ${args.join(' ')}\n${stderr}`)
-  }
-  return output
+function runGh(args: string[]): Promise<string> {
+  return new Promise((resolve, reject) => {
+    execFile('gh', args, { maxBuffer: 50 * 1024 * 1024 }, (err, stdout, stderr) => {
+      if (err) {
+        reject(new Error(`gh command failed: gh ${args.join(' ')}\n${stderr}`))
+      } else {
+        resolve(stdout)
+      }
+    })
+  })
 }
 
 /** Fetch a PR from GitHub and store it in SQLite. Returns the internal PR id. */
 export const fetchPR = createServerFn({ method: 'POST' })
-  .validator((d: { owner: string; repo: string; number: number }) => d)
+  .inputValidator((d: { owner: string; repo: string; number: number }) => d)
   .handler(async ({ data }) => {
     const { owner, repo, number } = data
     const repoSlug = `${owner}/${repo}`
@@ -80,7 +82,7 @@ export const fetchPR = createServerFn({ method: 'POST' })
 
 /** Get PR data from SQLite for display */
 export const getPRData = createServerFn({ method: 'GET' })
-  .validator((d: number) => d)
+  .inputValidator((d: number) => d)
   .handler(async ({ data: id }) => {
     const pr = getPRById(id)
     if (!pr) throw new Error(`PR not found: ${id}`)
@@ -100,7 +102,7 @@ export const getCachedPRs = createServerFn({ method: 'GET' })
 
 /** Check if a PR has been updated since last fetch */
 export const checkPRUpdate = createServerFn({ method: 'POST' })
-  .validator((d: { prId: number }) => d)
+  .inputValidator((d: { prId: number }) => d)
   .handler(async ({ data: { prId } }) => {
     const pr = getPRById(prId)
     if (!pr) throw new Error(`PR not found: ${prId}`)

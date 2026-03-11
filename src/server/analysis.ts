@@ -1,4 +1,5 @@
 import { createServerFn } from '@tanstack/react-start'
+import { spawn, execFile } from 'node:child_process'
 import {
   getPRById,
   getCommits,
@@ -12,6 +13,23 @@ import {
   setSetting,
 } from './db'
 import { detectRefs } from '@/lib/detect-refs'
+
+function spawnWithStdin(cmd: string, args: string[], input: string, env: NodeJS.ProcessEnv): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const proc = spawn(cmd, args, { env, stdio: ['pipe', 'pipe', 'pipe'] })
+    let stdout = ''
+    let stderr = ''
+    proc.stdout.on('data', (d: Buffer) => { stdout += d.toString() })
+    proc.stderr.on('data', (d: Buffer) => { stderr += d.toString() })
+    proc.on('close', (code) => {
+      if (code !== 0) reject(new Error(`${cmd} failed (exit ${code}): ${stderr}`))
+      else resolve(stdout)
+    })
+    proc.on('error', reject)
+    proc.stdin.write(input)
+    proc.stdin.end()
+  })
+}
 
 interface BeatFile {
   path: string
@@ -151,12 +169,13 @@ let codexAvailableCache: boolean | null = null
 async function checkCodexInstalled(): Promise<boolean> {
   if (codexAvailableCache !== null) return codexAvailableCache
   try {
-    const proc = Bun.spawn(['codex', '--version'], {
-      stdout: 'pipe',
-      stderr: 'pipe',
+    await new Promise<void>((resolve, reject) => {
+      execFile('codex', ['--version'], (err) => {
+        if (err) reject(err)
+        else resolve()
+      })
     })
-    await proc.exited
-    codexAvailableCache = proc.exitCode === 0
+    codexAvailableCache = true
   } catch {
     codexAvailableCache = false
   }
@@ -179,7 +198,7 @@ export const getPreferredModel = createServerFn({ method: 'GET' })
 
 /** Set the preferred model */
 export const setPreferredModel = createServerFn({ method: 'POST' })
-  .validator((d: { model: string }) => d)
+  .inputValidator((d: { model: string }) => d)
   .handler(async ({ data: { model } }) => {
     setSetting('preferred_model', model)
     return { ok: true }
@@ -187,7 +206,7 @@ export const setPreferredModel = createServerFn({ method: 'POST' })
 
 /** Run analysis on a PR using Claude CLI or Codex */
 export const analyzePR = createServerFn({ method: 'POST' })
-  .validator((d: { prId: number; model?: string }) => d)
+  .inputValidator((d: { prId: number; model?: string }) => d)
   .handler(async ({ data: { prId, model: requestedModel } }) => {
     const pr = getPRById(prId)
     if (!pr) throw new Error(`PR not found: ${prId}`)
@@ -211,37 +230,11 @@ export const analyzePR = createServerFn({ method: 'POST' })
     delete (env as Record<string, string | undefined>).CLAUDECODE
 
     let output: string
-    let exitCode: number
 
     if (model === 'codex') {
-      // Use Codex CLI
-      const proc = Bun.spawn(['codex', '-q', '--model', 'codex-mini-latest'], {
-        stdin: 'pipe', stdout: 'pipe', stderr: 'pipe', env,
-      })
-      proc.stdin.write(prompt)
-      proc.stdin.end()
-      output = await new Response(proc.stdout).text()
-      exitCode = await proc.exited
-
-      if (exitCode !== 0) {
-        const stderr = await new Response(proc.stderr).text()
-        throw new Error(`Codex CLI failed (exit ${exitCode}): ${stderr}`)
-      }
+      output = await spawnWithStdin('codex', ['-q', '--model', 'codex-mini-latest'], prompt, env)
     } else {
-      // Use Claude CLI
-      const proc = Bun.spawn(
-        ['claude', '-p', '--model', 'claude-sonnet-4-6', '--output-format', 'json'],
-        { stdin: 'pipe', stdout: 'pipe', stderr: 'pipe', env }
-      )
-      proc.stdin.write(prompt)
-      proc.stdin.end()
-      output = await new Response(proc.stdout).text()
-      exitCode = await proc.exited
-
-      if (exitCode !== 0) {
-        const stderr = await new Response(proc.stderr).text()
-        throw new Error(`Claude CLI failed (exit ${exitCode}): ${stderr}`)
-      }
+      output = await spawnWithStdin('claude', ['-p', '--model', 'claude-sonnet-4-6', '--output-format', 'json'], prompt, env)
     }
 
     // Parse CLI output — Claude wraps the response in { result: "..." }, Codex returns raw
@@ -307,7 +300,7 @@ export const analyzePR = createServerFn({ method: 'POST' })
 
 /** Get cached beats for a PR */
 export const getCachedBeats = createServerFn({ method: 'GET' })
-  .validator((d: { prId: number; model?: string }) => d)
+  .inputValidator((d: { prId: number; model?: string }) => d)
   .handler(async ({ data: { prId, model } }) => {
     const beats = getBeats(prId, model)
     return beats.length > 0 ? beats : null
@@ -315,7 +308,7 @@ export const getCachedBeats = createServerFn({ method: 'GET' })
 
 /** Clear cached beats for a PR */
 export const clearBeats = createServerFn({ method: 'POST' })
-  .validator((d: { prId: number; model?: string }) => d)
+  .inputValidator((d: { prId: number; model?: string }) => d)
   .handler(async ({ data: { prId, model } }) => {
     deleteBeats(prId, model)
     return { ok: true }
