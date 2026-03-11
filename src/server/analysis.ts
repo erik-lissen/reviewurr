@@ -193,7 +193,9 @@ export const checkCodexAvailable = createServerFn({ method: 'GET' })
 export const getPreferredModel = createServerFn({ method: 'GET' })
   .handler(async () => {
     const model = getSetting('preferred_model')
-    return (model === 'codex' ? 'codex' : 'claude-sonnet') as 'claude-sonnet' | 'codex'
+    if (model === 'codex') return 'codex' as const
+    if (model === 'claude-sonnet') return 'claude-sonnet' as const
+    return 'claude-opus' as const
   })
 
 /** Set the preferred model */
@@ -223,7 +225,7 @@ export const analyzePR = createServerFn({ method: 'POST' })
     }
 
     const prompt = buildPrompt(pr, commitDiffs, diffRow.content, fileList)
-    const model = requestedModel || 'claude-sonnet'
+    const model = requestedModel || 'claude-opus'
 
     // Shell out to CLI — unset CLAUDECODE env var regardless of model
     const env = { ...process.env }
@@ -234,7 +236,8 @@ export const analyzePR = createServerFn({ method: 'POST' })
     if (model === 'codex') {
       output = await spawnWithStdin('codex', ['-q', '--model', 'codex-mini-latest'], prompt, env)
     } else {
-      output = await spawnWithStdin('claude', ['-p', '--model', 'claude-sonnet-4-6', '--output-format', 'json'], prompt, env)
+      const modelId = model === 'claude-opus' ? 'claude-opus-4-6' : 'claude-sonnet-4-6'
+      output = await spawnWithStdin('claude', ['-p', '--model', modelId, '--output-format', 'json'], prompt, env)
     }
 
     // Parse CLI output — Claude wraps the response in { result: "..." }, Codex returns raw

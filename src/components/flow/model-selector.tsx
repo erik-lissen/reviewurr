@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { checkCodexAvailable } from '@/server/analysis'
 
-export type ModelOption = 'claude-sonnet' | 'codex'
+export type ModelOption = 'claude-sonnet' | 'claude-opus' | 'codex'
 
 interface ModelSelectorProps {
   value: ModelOption
@@ -25,6 +25,7 @@ export function ModelSelector({ value, onChange }: ModelSelectorProps) {
       title="Select analysis model"
     >
       <option value="claude-sonnet">Claude Sonnet</option>
+      <option value="claude-opus">Claude Opus</option>
       <option
         value="codex"
         disabled={codexAvailable === false}

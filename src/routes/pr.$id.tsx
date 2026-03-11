@@ -16,7 +16,7 @@ function PrDetail() {
   const { pr, files } = Route.useLoaderData()
   const [activeTab, setActiveTab] = useState<'files' | 'flow'>('files')
   const [viewMode, setViewMode] = useState<ViewMode>('unified')
-  const [selectedModel, setSelectedModel] = useState<ModelOption>('claude-sonnet')
+  const [selectedModel, setSelectedModel] = useState<ModelOption>('claude-opus')
 
   // Load preferred model from settings on mount
   useEffect(() => {
